@@ -1,0 +1,16 @@
+.bt{
+    background-color: white;
+    outline: 0;
+    border:0;
+    padding: 20px 30px;
+    border-radius: 6px;
+    background-color: rgb(192, 23, 23);
+    color: white;
+    font-size: 10px;
+    width: 100%;
+    cursor: pointer;
+    
+}
+.bt:hover{
+    box-shadow: 0 0 6px #3b25b8;
+}
