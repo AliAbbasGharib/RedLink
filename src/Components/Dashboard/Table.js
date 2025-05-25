@@ -19,7 +19,7 @@ import {
     Tooltip,
     
 } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
@@ -33,6 +33,7 @@ export default function TableShow(props) {
     const [statusAnchorEl, setStatusAnchorEl] = useState(null);
     const [statusRow, setStatusRow] = useState(null);
 
+    const nav = useNavigate();
     const currentUser = props.currentUser || false;
     const allowedStatuses = ["active", "inactive", "pending", "banned"];
 
@@ -64,7 +65,6 @@ export default function TableShow(props) {
                             {props.header.map((el) => (
                                 <TableCell key={el.key}>{el.name}</TableCell>
                             ))}
-                            <TableCell>Status Info</TableCell>
                             <TableCell>Action</TableCell>
                         </TableRow>
                     </TableHead>
@@ -114,19 +114,6 @@ export default function TableShow(props) {
                                         </TableCell>
                                     ))}
                                     <TableCell>
-                                        <Chip
-                                            label={`User is ${el.status.charAt(0).toUpperCase() + el.status.slice(1)}`}
-                                            color={
-                                                el.status === "active"
-                                                    ? "success"
-                                                    : el.status === "inactive"
-                                                        ? "error"
-                                                        : "default"
-                                            }
-                                            size="small"
-                                        />
-                                    </TableCell>
-                                    <TableCell>
                                         <Tooltip title="Actions">
                                             <IconButton
                                                 size="small"
@@ -160,9 +147,9 @@ export default function TableShow(props) {
                                                 Change Status
                                             </MenuItem>
                                             <MenuItem
-                                                component={Link}
-                                                to={`${el._id}`}
-                                                onClick={handleMenuClose}
+                                                // component={nav}
+                                                // to={`${el._id}`}
+                                                onClick={()=> nav(`/dashboard/users/${el._id}`)}
                                             >
                                                 <EditIcon sx={{ mr: 1 }} />
                                                 Edit

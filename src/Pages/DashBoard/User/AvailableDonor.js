@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import Tables from "../../../Components/Dashboard/Table";
-import { USER, USERS, USERSTATUS } from "../../../API/Api";
+import { AVAILABLEDONOR, USER, USERSTATUS } from "../../../API/Api";
 import { Link } from "react-router-dom";
 import { Axios } from "../../../API/Axios";
 import axios from "axios";
 import Cookie from "cookie-universal";
 
-export default function Users() {
+export default function AvailableDonor() {
     const [users, setUsers] = useState([]);
     const [currentUser, setCurrentUser] = useState({});
     const [searchBloodType, setSearchBloodType] = useState("");
@@ -15,12 +15,12 @@ export default function Users() {
 
     const cookie = Cookie();
     const token = cookie.get("token");
+
     const header = [
         { name: "Name", key: "name" },
         { name: "PhoneNumber", key: "phone_number" },
         { name: "Blood Type", key: "blood_type" },
         { name: "Address", key: "address" },
-        { name: "Role", key: "role" },
         { name: "Status", key: "status" }
     ];
 
@@ -31,27 +31,44 @@ export default function Users() {
     }, []);
 
     useEffect(() => {
-        Axios.get(USERS)
+        Axios.get(AVAILABLEDONOR)
             .then((response) => {
-                setUsers(response.data.users);
-                setFilteredUsers(response.data.users);
+                console.log("Available Donors Response:", response.data.users);
+                const donors = response.data.users;
+                setUsers(donors);
+                setFilteredUsers(donors);
             })
             .catch((error) => console.log(error));
     }, []);
 
     function deleteUser(id) {
-        axios.delete(`${USER}/${id}`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        })
+        axios
+            .delete(`${USER}/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
             .then(() => {
-                setUsers(prev => prev.filter((el) => el._id !== id));
-                setFilteredUsers(prev => prev.filter((el) => el._id !== id));
+                setUsers((prev) => prev.filter((el) => el._id !== id));
+                setFilteredUsers((prev) => prev.filter((el) => el._id !== id));
             })
             .catch((error) => console.log(error));
     }
 
+    // Handle filter button click
+    function handleFilter() {
+        setFilteredUsers(
+            users.filter((user) => {
+                const bloodTypeMatch = searchBloodType
+                    ? user.blood_type === searchBloodType
+                    : true;
+                const addressMatch = searchAddress
+                    ? user.address?.toLowerCase().includes(searchAddress.toLowerCase())
+                    : true;
+                return bloodTypeMatch && addressMatch;
+            })
+        );
+    }
     function updateStatus(userId, newStatus) {
         axios.put(`${USERSTATUS}/${userId}`, { status: newStatus }, {
             headers: {
@@ -72,16 +89,6 @@ export default function Users() {
             })
             .catch((error) => console.log("Failed to update status:", error));
     }
-    // Handle filter button click
-    function handleFilter() {
-        setFilteredUsers(
-            users.filter(user => {
-                const bloodTypeMatch = searchBloodType ? user.blood_type === searchBloodType : true;
-                const addressMatch = searchAddress ? user.address?.toLowerCase().includes(searchAddress.toLowerCase()) : true;
-                return bloodTypeMatch && addressMatch;
-            })
-        );
-    }
 
     // Optional: Reset filter
     function handleReset() {
@@ -93,13 +100,19 @@ export default function Users() {
     return (
         <div className="bg-white w-100 p-2 vh-100">
             <div className="d-flex align-items-center justify-content-between mb-2">
-                <h1>Users Page</h1>
-                <Link className="btn" style={{
-                    background: "rgb(192, 23, 23)",
-                    color: "#fff",
-                    padding: "10px",
-                    width: "150px"
-                }} to="/dashboard/user/add">Add User</Link>
+                <h1>Available Donor Page</h1>
+                <Link
+                    className="btn"
+                    style={{
+                        background: "rgb(192, 23, 23)",
+                        color: "#fff",
+                        padding: "10px",
+                        width: "150px",
+                    }}
+                    to="/dashboard/user/add"
+                >
+                    Add User
+                </Link>
             </div>
 
             {/* Responsive Search Filters */}
@@ -108,7 +121,7 @@ export default function Users() {
                     <select
                         className="form-control"
                         value={searchBloodType}
-                        onChange={e => setSearchBloodType(e.target.value)}
+                        onChange={(e) => setSearchBloodType(e.target.value)}
                     >
                         <option value="">All Blood Types</option>
                         <option value="A+">A+</option>
@@ -127,14 +140,18 @@ export default function Users() {
                         className="form-control"
                         placeholder="Search by Address"
                         value={searchAddress}
-                        onChange={e => setSearchAddress(e.target.value)}
+                        onChange={(e) => setSearchAddress(e.target.value)}
                     />
                 </div>
                 <div className="col-12 col-md-2 mb-2 mb-md-0">
-                    <button className="btn btn-danger w-100" onClick={handleFilter}>Filter</button>
+                    <button className="btn btn-danger w-100" onClick={handleFilter}>
+                        Filter
+                    </button>
                 </div>
                 <div className="col-12 col-md-2">
-                    <button className="btn btn-secondary w-100" onClick={handleReset}>Reset</button>
+                    <button className="btn btn-secondary w-100" onClick={handleReset}>
+                        Reset
+                    </button>
                 </div>
             </div>
 

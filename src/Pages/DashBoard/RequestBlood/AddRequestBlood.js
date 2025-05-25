@@ -14,7 +14,6 @@ export default function AddRequestBlood() {
         blood_type: '',
         quantity: '',
         request_date: '',
-        hospital: '',
         donation_point: '',
         contact_number: '',
         patient_name: '',
@@ -30,11 +29,9 @@ export default function AddRequestBlood() {
             
         }).then((res) => {
             console.log(res.data);
-            nav("/dashboard/requests");
+            nav("/dashboard/request");
         }).catch((error) => {
-            console.error("There was an error submitting the request!", error);
-            alert("Error submitting request");      
-        nav("/dashboard/requests");
+            console.error("There was an error submitting the request!", error);   
     });
     }
     return (

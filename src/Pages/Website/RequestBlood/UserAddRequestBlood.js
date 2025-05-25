@@ -34,8 +34,6 @@ export default function AddRequestBlood() {
             nav("/request-blood");
         }).catch((error) => {
             console.error("There was an error submitting the request!", error);
-            alert("Error submitting request");
-            nav("/dashboard/requests");
         });
     }
 return (

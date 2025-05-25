@@ -27,13 +27,70 @@ export default function AddUser() {
         blood_type: '',
         address: '',
         last_donation_date: '',
-        role: ''
+        role: '',
+        donation_point_lat: null,
+        donation_point_lng: null,
+        location: { type: "Point", coordinates: [] },
     });
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const focus = useRef(null);
     const nav = useNavigate();
+    const donationPointRef = useRef(null);
+    const autocompleteRef = useRef(null);
+    function loadScript(url, callback) {
+        const existingScript = document.getElementById("googleMaps");
+        if (!existingScript) {
+            const script = document.createElement("script");
+            script.src = url;
+            script.id = "googleMaps";
+            script.async = true;
+            script.defer = true;
+            script.onload = callback;
+            document.body.appendChild(script);
+        } else {
+            callback();
+        }
+    }
+    useEffect(() => {
+        loadScript(
+            `https://maps.googleapis.com/maps/api/js?key=AIzaSyAxjQtpZsmQISacL74_I90QUGElgEre69M&libraries=places`,
+            () => {
+                if (window.google && window.google.maps) {
+                    autocompleteRef.current = new window.google.maps.places.Autocomplete(
+                        donationPointRef.current,
+                        {
+                            types: ["establishment", "geocode"],
+                            componentRestrictions: { country: "lb" },
+                            fields: ["name", "formatted_address", "geometry"],
+                        }
+                    );
+
+                    autocompleteRef.current.addListener("place_changed", () => {
+                        const place = autocompleteRef.current.getPlace();
+                        if (place && (place.name || place.formatted_address)) {
+                            const locationName = `${place.name || ""} - ${place.formatted_address || ""}`.trim();
+                            const lat = place.geometry?.location.lat();
+                            const lng = place.geometry?.location.lng();
+
+                            setUser((prev) => ({
+                                ...prev,
+                                address: locationName,
+                                donation_point_lat: lat,
+                                donation_point_lng: lng,
+                                location: {
+                                    type: "Point",
+                                    coordinates: [lng, lat], // GeoJSON format
+                                },
+                            }));
+                            setError(null);
+                        }
+                    });
+                }
+            }
+        );
+    }, []);
 
     useEffect(() => {
         if (focus.current) focus.current.focus();
@@ -182,15 +239,45 @@ export default function AddUser() {
                         </Select>
                     </FormControl>
                     <TextField
-                        label="Address"
+                        label="*Address"
                         name="address"
-                        value={user.address}
+                        placeholder="Start typing a location..."
+                        value={user.address || ""}
                         onChange={handleChange}
-                        required
+                        inputRef={donationPointRef}
                         fullWidth
-                        margin="normal"
-                        sx={redInputSx}
+                        required
+                        sx={{ mb: 1 }}
+                        helperText="Choose a location from the suggestions."
                     />
+                    {user.address && (
+                        <Box mb={2}>
+                            <Typography fontWeight="bold" mb={1}>Map Preview</Typography>
+                            <Box sx={{ height: 300, width: "100%", borderRadius: 2, overflow: "hidden" }}>
+                                <iframe
+                                    title="Google Maps Location"
+                                    width="100%"
+                                    height="100%"
+                                    style={{ border: 0 }}
+                                    loading="lazy"
+                                    allowFullScreen
+                                    src={
+                                        user.donation_point_lat && user.donation_point_lng
+                                            ? `https://www.google.com/maps/embed/v1/view?key=AIzaSyAxjQtpZsmQISacL74_I90QUGElgEre69M&center=${user.donation_point_lat},${user.donation_point_lng}&zoom=16`
+                                            : `https://www.google.com/maps/embed/v1/place?key=AIzaSyAxjQtpZsmQISacL74_I90QUGElgEre69M&q=${encodeURIComponent(user.address)}`
+                                    }
+                                />
+                            </Box>
+                        </Box>
+                    )}
+
+                    {/* Debug Coordinates Display */}
+                    {user.location?.coordinates?.length > 0 && (
+                        <Alert severity="info" sx={{ mb: 2 }}>
+                            Coordinates: {user.location.coordinates[1]} (lat), {user.location.coordinates[0]} (lng)
+                        </Alert>
+                    )}
+
                     <TextField
                         label="Last Donation Date"
                         name="last_donation_date"

@@ -36,17 +36,70 @@ export default function Register() {
         blood_type: "",
         address: "",
         last_donation_date: "",
+        latitude: null,
+        longitude: null,
+        location: { type: "Point", coordinates: [] },
     });
 
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [detectingLocation, setDetectingLocation] = useState(false);
 
     const focus = useRef(null);
-    useEffect(() => {
-        focus.current.focus();
-    }, []);
     const nav = useNavigate();
     const cookies = Cookie();
+
+    useEffect(() => {
+        focus.current.focus();
+        detectLocation(); // detect location on component mount
+    }, []);
+
+    // Reverse geocode with OpenStreetMap Nominatim
+    const reverseGeocode = async (lat, lon) => {
+        try {
+            const res = await axios.get("https://nominatim.openstreetmap.org/reverse", {
+                params: {
+                    format: "json",
+                    lat,
+                    lon,
+                    zoom: 18,
+                    addressdetails: 1,
+                },
+            });
+            const { city, town, village, country } = res.data.address;
+            const locationName = city || town || village || "";
+            return `${locationName}, ${country}`;
+        } catch (error) {
+            console.warn("Reverse geocode error:", error);
+            return "";
+        }
+    };
+
+    // Detect user location & update address field
+    const detectLocation = () => {
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser");
+            return;
+        }
+        setDetectingLocation(true);
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                const address = await reverseGeocode(latitude, longitude);
+                setUsers(prev => ({
+                    ...prev,
+                    latitude,
+                    longitude,
+                    address: address || prev.address,
+                }));
+                setDetectingLocation(false);
+            },
+            (error) => {
+                alert("Unable to retrieve your location. Please enter your address manually.");
+                setDetectingLocation(false);
+            }
+        );
+    };
 
     function handleChange(e) {
         setUsers({
@@ -58,17 +111,31 @@ export default function Register() {
     async function handleSubmit(e) {
         e.preventDefault();
         setLoading(true);
+        setError("");
         try {
-            await axios.post(REGISTER, users)
+            // Extract latitude and longitude
+            const { latitude, longitude, ...rest } = users;
+
+            // Prepare payload with location GeoJSON
+            const payload = {
+                ...rest,
+                location: {
+                    type: "Point",
+                    coordinates: [longitude, latitude], // longitude first
+                },
+            };
+
+            await axios.post(REGISTER, payload)
                 .then(res => {
                     const token = res.data.token;
                     cookies.set("token", token);
                     nav('/');
-                    setLoading(false);
                 });
         }
         catch (error) {
             setError(error?.response?.data?.message || "Registration failed");
+        }
+        finally {
             setLoading(false);
         }
     }
@@ -242,6 +309,25 @@ export default function Register() {
                                 ),
                             }}
                         />
+                        {/* Show detected coordinates for debugging */}
+                        {(users.latitude !== null && users.longitude !== null) && (
+                            <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
+                                Detected Location: {users.latitude.toFixed(5)}, {users.longitude.toFixed(5)}
+                            </Typography>
+                        )}
+
+                        <Button
+                            type="button"
+                            variant="outlined"
+                            color="primary"
+                            fullWidth
+                            sx={{ mt: 1, mb: 3 }}
+                            onClick={detectLocation}
+                            disabled={detectingLocation}
+                        >
+                            {detectingLocation ? "Detecting Location..." : "Detect My Location"}
+                        </Button>
+
                         <TextField
                             label="Last Donation Date"
                             name="last_donation_date"
@@ -260,6 +346,7 @@ export default function Register() {
                                 ),
                             }}
                         />
+
                         <TextField
                             label="Password"
                             name="password"
@@ -269,7 +356,6 @@ export default function Register() {
                             required
                             fullWidth
                             margin="normal"
-                            inputProps={{ minLength: 8 }}
                             sx={redFocusSx}
                             InputProps={{
                                 startAdornment: (
@@ -278,20 +364,26 @@ export default function Register() {
                                     </InputAdornment>
                                 ),
                             }}
-                            helperText={users.password.length > 0 && users.password.length < 8 ? "Password must be at least 8 characters" : ""}
-                            error={users.password.length > 0 && users.password.length < 8}
                         />
+
                         {error && (
                             <Alert severity="error" sx={{ mt: 2 }}>
                                 {error}
                             </Alert>
                         )}
+
                         <Button
-                            type="submit"
                             variant="contained"
-                            color="error"
+                            type="submit"
                             fullWidth
-                            sx={{ mt: 3, borderRadius: 3, fontWeight: 600, py: 1.2 }}
+                            sx={{
+                                mt: 3,
+                                backgroundColor: "red",
+                                fontWeight: "bold",
+                                ":hover": {
+                                    backgroundColor: "darkred",
+                                },
+                            }}
                         >
                             Register
                         </Button>

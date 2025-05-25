@@ -19,12 +19,12 @@ import {
   CircularProgress,
 } from "@mui/material";
 
-
+// Load Google Maps script
 function loadScript(url, callback) {
   const existingScript = document.getElementById("googleMaps");
   if (!existingScript) {
     const script = document.createElement("script");
-    script.src = url;
+    script.src = url + 'loading=async';
     script.id = "googleMaps";
     script.async = true;
     script.defer = true;
@@ -40,6 +40,7 @@ export default function RequestBloodForm({ initialData = {}, onSubmit, title, bu
     ...initialData,
     donation_point_lat: null,
     donation_point_lng: null,
+    location: { type: "Point", coordinates: [] },
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -50,7 +51,7 @@ export default function RequestBloodForm({ initialData = {}, onSubmit, title, bu
 
   useEffect(() => {
     loadScript(
-      `https://maps.googleapis.com/maps/api/js?key=AIzaSyAxjQtpZsmQISacL74_I90QUGElgEre69M&libraries=places`,
+      `https://maps.googleapis.com/maps/api/js?key=AIzaSyAxjQtpZsmQISacL74_I90QUGElgEre69M&libraries=places&loading=async`,
       () => {
         if (window.google && window.google.maps) {
           autocompleteRef.current = new window.google.maps.places.Autocomplete(
@@ -74,6 +75,10 @@ export default function RequestBloodForm({ initialData = {}, onSubmit, title, bu
                 donation_point: locationName,
                 donation_point_lat: lat,
                 donation_point_lng: lng,
+                location: {
+                  type: "Point",
+                  coordinates: [lng, lat], // GeoJSON format
+                },
               }));
               setError(null);
             }
@@ -88,7 +93,14 @@ export default function RequestBloodForm({ initialData = {}, onSubmit, title, bu
     setForm((prev) => ({ ...prev, [name]: value }));
     setError(null);
   }
-
+  useEffect(() => {
+    if (initialData && Object.keys(initialData).length > 0) {
+      setForm((prevForm) => ({
+        ...prevForm,
+        ...initialData,
+      }));
+    }
+  }, [initialData]);
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
@@ -155,14 +167,9 @@ export default function RequestBloodForm({ initialData = {}, onSubmit, title, bu
             input={<OutlinedInput label="Blood Type" />}
           >
             <MenuItem value="">Select Blood Type</MenuItem>
-            <MenuItem value="A+">A+</MenuItem>
-            <MenuItem value="A-">A-</MenuItem>
-            <MenuItem value="B+">B+</MenuItem>
-            <MenuItem value="B-">B-</MenuItem>
-            <MenuItem value="AB+">AB+</MenuItem>
-            <MenuItem value="AB-">AB-</MenuItem>
-            <MenuItem value="O+">O+</MenuItem>
-            <MenuItem value="O-">O-</MenuItem>
+            {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((type) => (
+              <MenuItem key={type} value={type}>{type}</MenuItem>
+            ))}
           </Select>
         </FormControl>
 
@@ -192,11 +199,9 @@ export default function RequestBloodForm({ initialData = {}, onSubmit, title, bu
           fullWidth
           required
           sx={{ mb: 2 }}
-          InputLabelProps={{ shrink: true }}
         />
 
-
-        {/* Donation Point with Google Autocomplete */}
+        {/* Donation Point */}
         <TextField
           label="Donation Point"
           name="donation_point"
@@ -230,6 +235,13 @@ export default function RequestBloodForm({ initialData = {}, onSubmit, title, bu
               />
             </Box>
           </Box>
+        )}
+
+        {/* Debug Coordinates Display */}
+        {form.location?.coordinates?.length > 0 && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            Coordinates: {form.location.coordinates[1]} (lat), {form.location.coordinates[0]} (lng)
+          </Alert>
         )}
 
         {/* Contact Number */}
@@ -285,6 +297,7 @@ export default function RequestBloodForm({ initialData = {}, onSubmit, title, bu
           </Select>
         </FormControl>
 
+        {/* Submit */}
         <Button
           variant="contained"
           color="error"

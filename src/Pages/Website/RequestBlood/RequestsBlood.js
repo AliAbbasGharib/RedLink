@@ -12,7 +12,8 @@ import {
     TextField,
     MenuItem,
     IconButton,
-    Menu
+    Menu,
+    Pagination
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -20,7 +21,7 @@ import DoneIcon from "@mui/icons-material/Done";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import NavBar from "../NavBar";
 import { Axios } from "../../../API/Axios";
-import { REQUESTBLOOD, USER } from "../../../API/Api";
+import { REQUESTBLOOD, REQUESTBLOODLIMT, USER } from "../../../API/Api";
 import { Link } from "react-router-dom";
 import Cookie from "cookie-universal";
 
@@ -29,31 +30,30 @@ const token = cookies.get("token");
 
 export default function RequestBloodCardList() {
     const bloodTypes = ["", "O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"];
-
     const [searchAddress, setSearchAddress] = useState("");
     const [searchBloodType, setSearchBloodType] = useState("");
     const [requests, setRequests] = useState([]);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedReq, setSelectedReq] = useState(null);
     const [user, setUser] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const requestsPerPage = 12;
 
     useEffect(() => {
         if (token) {
-            try {
-             Axios.get(USER)
-             .then((response) => {
-                const userData = response.data._id;
-                setUser(userData);
-                console.log("User data:", userData);
-             })
-            } catch (e) {
-                console.error("Failed to parse user token:", e);
-            }
+            Axios.get(USER)
+                .then((response) => {
+                    const userData = response.data._id;
+                    setUser(userData);
+                })
+                .catch((e) => {
+                    console.error("Failed to fetch user:", e);
+                });
         }
     }, []);
 
     useEffect(() => {
-        Axios.get(REQUESTBLOOD)
+        Axios.get(`${REQUESTBLOODLIMT}/50`) // Load more than one page worth
             .then((response) => {
                 setRequests(response.data.requests);
             })
@@ -68,11 +68,14 @@ export default function RequestBloodCardList() {
             (request.blood_type?.toLowerCase() || "") === searchBloodType.toLowerCase())
     );
 
-    const getStatusChip = (status) => {
-        return status === "complete"
+    const indexOfLastRequest = currentPage * requestsPerPage;
+    const indexOfFirstRequest = indexOfLastRequest - requestsPerPage;
+    const currentRequests = filteredRequests.slice(indexOfFirstRequest, indexOfLastRequest);
+
+    const getStatusChip = (status) =>
+        status === "complete"
             ? <Chip label="Complete" color="success" size="small" />
             : <Chip label="Non Complete" color="warning" size="small" />;
-    };
 
     const handleMenuOpen = (event, req) => {
         setAnchorEl(event.currentTarget);
@@ -106,18 +109,10 @@ export default function RequestBloodCardList() {
         handleMenuClose();
     };
 
-    const handleViewDetails = (id) => {
-        alert(`View details for request ID: ${id}`);
-        handleMenuClose();
-    };
-
     const canManageRequest = (request) => {
         if (!user) return false;
         const requestUserId = typeof request.user_id === "object" ? request.user_id._id : request.user_id;
-        return (
-            user.role === "1995" ||
-            requestUserId === user
-        );
+        return user.role === "1995" || requestUserId === user;
     };
 
     return (
@@ -136,13 +131,7 @@ export default function RequestBloodCardList() {
                             color="error"
                             component={Link}
                             to="/request-blood/add-request"
-                            sx={{
-                                color: "#fff",
-                                fontWeight: "bold",
-                                textTransform: "none",
-                                boxShadow: 2,
-                                px: 3,
-                            }}
+                            sx={{ color: "#fff", fontWeight: "bold", textTransform: "none", boxShadow: 2, px: 3 }}
                         >
                             Add Request
                         </Button>
@@ -172,78 +161,95 @@ export default function RequestBloodCardList() {
                         </TextField>
                     </Box>
 
-                    <Grid container spacing={6}>
-                        {filteredRequests.map((request) => (
-                            <Grid item xs={12} sm={6} md={4} lg={3} key={request._id}>
+                    <Grid container spacing={4}>
+                        {currentRequests.map((request) => (
+                            <Grid item xs={12} sm={5} md={4} key={request._id} sx={{ display: "flex" }}>
                                 <Card
                                     elevation={3}
                                     sx={{
-                                        width: "100%",
-                                        maxWidth: 420,
                                         position: "relative",
-                                        bgcolor:
-                                            request.done_status === "complete"
-                                                ? "#e8f5e9"
-                                                : "background.paper",
-                                        transition: "background 0.3s",
+                                        borderRadius: 3,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        justifyContent: "space-between",
+                                        height: "100%",
+                                        transition: "0.3s",
+                                        backgroundColor: request.done_status === "complete" ? "#f1f8e9" : "#fff",
+                                        "&:hover": {
+                                            transform: "scale(1.02)",
+                                        },
                                     }}
                                 >
                                     {canManageRequest(request) && (
                                         <IconButton
-                                            aria-label="more"
+                                            aria-label="options"
                                             onClick={(e) => handleMenuOpen(e, request)}
                                             sx={{ position: "absolute", top: 8, right: 8 }}
                                         >
                                             <MoreVertIcon />
                                         </IconButton>
                                     )}
-                                    <CardContent>
+
+                                    <CardContent sx={{ flexGrow: 1 }}>
                                         <Box display="flex" alignItems="center" mb={2}>
-                                            <Avatar
-                                                sx={{
-                                                    bgcolor: "#d32f2f",
-                                                    width: 56,
-                                                    height: 56,
-                                                    fontWeight: "bold",
-                                                    fontSize: 20,
-                                                }}
-                                            >
+                                            <Avatar sx={{ bgcolor: "#d32f2f", width: 48, height: 48 }}>
                                                 {request.blood_type}
                                             </Avatar>
                                             <Box ml={2}>
-                                                <Typography variant="h6" fontWeight="bold">
+                                                <Typography fontWeight="bold">
                                                     {request.patient_name}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    {request.hospital_name}
                                                 </Typography>
                                             </Box>
                                         </Box>
+
+                                        <Typography style={{ width: "300px" }} variant="body2" mb={1}>
+                                            <strong>Location:</strong>{" "}
+                                            <a
+                                                href={`https://www.google.com/maps/search/?api=1&query=${request.donation_point}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                style={{ color: "#1976d2", textDecoration: "underline" }}
+                                            >
+                                                {request.donation_point}
+                                            </a>
+                                        </Typography>
+
                                         <Typography variant="body2" mb={1}>
-                                            <strong>Location:</strong> {request.donation_point}
+                                            <strong>Status:</strong> {getStatusChip(request.done_status)}
                                         </Typography>
-                                        <Typography variant="body1" mb={1}>
-                                            <strong>Status:</strong>{" "}
-                                            {getStatusChip(request.done_status)}
-                                        </Typography>
-                                        <Box mt={2} textAlign="right">
-                                            <Button
-                                                variant="contained"
-                                                color="primary"
-                                                size="small"
-                                                onClick={() => handleViewDetails(request._id)}
+                                    </CardContent>
+
+                                    <Box px={2} pb={2} textAlign="right">
+                                        <Button variant="contained" size="small" color="primary">
+                                            <Link
+                                                style={{ textDecoration: "none", color: "#fff" }}
+                                                to={`${request._id}`}
                                             >
                                                 View Details
-                                            </Button>
-                                        </Box>
-                                    </CardContent>
+                                            </Link>
+                                        </Button>
+                                    </Box>
                                 </Card>
                             </Grid>
                         ))}
                     </Grid>
+
+                    {/* Pagination */}
+                    {filteredRequests.length > requestsPerPage && (
+                        <Box mt={4} display="flex" justifyContent="center">
+                            <Pagination
+                                count={Math.ceil(filteredRequests.length / requestsPerPage)}
+                                page={currentPage}
+                                onChange={(e, value) => setCurrentPage(value)}
+                                color="primary"
+                                shape="rounded"
+                            />
+                        </Box>
+                    )}
                 </Box>
             </Container>
 
+            {/* Menu Options */}
             <Menu
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl && selectedReq && canManageRequest(selectedReq))}
@@ -253,7 +259,7 @@ export default function RequestBloodCardList() {
             >
                 {selectedReq && (
                     <>
-                        <MenuItem onClick={() => handleViewDetails(selectedReq._id)}>
+                        <MenuItem>
                             <VisibilityIcon fontSize="small" sx={{ mr: 1 }} />
                             View Details
                         </MenuItem>

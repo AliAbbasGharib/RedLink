@@ -5,6 +5,7 @@ import { Menu as MenuContext } from "../../Context/MenuContext";
 import { LOGOUT, USER } from "../../API/Api";
 import Cookie from 'cookie-universal';
 import { Axios } from "../../API/Axios";
+import { Link } from "react-router-dom";
 import {
     AppBar,
     Toolbar,
@@ -14,7 +15,7 @@ import {
     MenuItem,
     Box,
     Avatar,
-    CircularProgress
+    CircularProgress,
 } from "@mui/material";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
@@ -76,7 +77,11 @@ export default function TopBar() {
                             <FontAwesomeIcon icon={faBars} style={{ fontSize: 24 }} />
                         </IconButton>
                     </Box>
+
+
+
                     <Box>
+
                         <IconButton onClick={handleMenuOpen} color="inherit">
                             <Avatar sx={{ bgcolor: "#fff", color: "#b71c1c", width: 32, height: 32 }}>
                                 {name ? name.charAt(0).toUpperCase() : "U"}
@@ -90,6 +95,7 @@ export default function TopBar() {
                             transformOrigin={{ vertical: "top", horizontal: "right" }}
                         >
                             <MenuItem disabled>{name}</MenuItem>
+                            <MenuItem > <Link style={{ textDecoration: "none" ,color:"red" }} to="/">Home Page</Link> </MenuItem>
                             <MenuItem onClick={handleLogOut}>Logout</MenuItem>
                         </Menu>
                     </Box>

@@ -24,9 +24,10 @@ import {
     CircularProgress,
     Chip,
     Divider,
-    ListSubheader
+    ListSubheader,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { Link } from "react-router-dom";
 
 function GetRequestBlood() {
     const [search, setSearch] = useState("");
@@ -37,23 +38,14 @@ function GetRequestBlood() {
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedReq, setSelectedReq] = useState(null);
 
-    const filteredRequests = requests.filter((req) => {
-        const patient = (req.patient_name || "").toLowerCase();
-        const blood = (req.blood_type || "").toLowerCase();
-        const hospital = (req.hospital_name || "").toLowerCase();
-        const term = search.toLowerCase();
-        return patient.includes(term) || blood.includes(term) || hospital.includes(term);
-    });
-
     useEffect(() => {
         const fetchRequests = async () => {
             setLoading(true);
-            setError(null);
             try {
                 const response = await Axios.get(REQUESTBLOOD);
                 const data = response.data?.requests || [];
                 setRequests(Array.isArray(data) ? data : []);
-            } catch (err) {
+            } catch {
                 setError("Error fetching blood requests.");
             } finally {
                 setLoading(false);
@@ -62,52 +54,67 @@ function GetRequestBlood() {
         fetchRequests();
     }, []);
 
-    const handleView = (req) => {
-        alert(`Viewing request for ${req.patient_name}`);
-    };
+    const filteredRequests = requests.filter((req) => {
+        const term = search.toLowerCase();
+        return (
+            req.patient_name?.toLowerCase().includes(term) ||
+            req.blood_type?.toLowerCase().includes(term) ||
+            req.hospital_name?.toLowerCase().includes(term)
+        );
+    });
 
-    const handleUpdate = (req) => {
-        // Add update logic
-    };
+    const handleView = (req) => alert(`Viewing request for ${req.patient_name}`);
 
-    async function handleDelete(request) {
+    const handleDelete = async (req) => {
         try {
-            await Axios.delete(`${REQUESTBLOOD}/${request._id}`);
-            setRequests((prev) => prev.filter((req) => req._id !== request._id));
+            await Axios.delete(`${REQUESTBLOOD}/${req._id}`);
+            setRequests((prev) => prev.filter((r) => r._id !== req._id));
             setConfirmRequest(null);
-        } catch (err) {
+        } catch {
             alert("Failed to delete request.");
         }
-    }
+    };
 
-    const handleChangeStatus = async (req, newStatus) => {
+    const handleChangeStatus = async (req, status) => {
         try {
-            await Axios.put(`${REQUESTBLOOD}/status/${req._id}`, { done_status: newStatus });
-            setRequests(prev =>
-                prev.map(r => (r._id === req._id ? { ...r, done_status: newStatus } : r))
+            await Axios.put(`${REQUESTBLOOD}/status/${req._id}`, { done_status: status });
+            setRequests((prev) =>
+                prev.map((r) => (r._id === req._id ? { ...r, done_status: status } : r))
             );
-        } catch (err) {
+        } catch {
             alert("Failed to update status.");
         }
     };
 
-    // Dropdown menu handlers
     const handleMenuOpen = (event, req) => {
         setAnchorEl(event.currentTarget);
         setSelectedReq(req);
     };
+
     const handleMenuClose = () => {
         setAnchorEl(null);
         setSelectedReq(null);
     };
 
-    // Helper for status chip color
-    const getStatusChip = (status) => {
-        if (status === "complete") {
-            return <Chip label="Complete" color="success" variant="filled" />;
-        }
-        return <Chip label="Non Complete" color="warning" variant="filled" />;
-    };
+    const statusChip = (status) => (
+        <Chip
+            label={status === "complete" ? "Complete" : "Non Complete"}
+            color={status === "complete" ? "success" : "warning"}
+            variant="filled"
+        />
+    );
+
+    const menuItems = [
+        { label: "View", onClick: () => handleView(selectedReq) },
+        { label: "Update", link: `${selectedReq?._id}` },
+        {
+            label: "Delete",
+            onClick: () => setConfirmRequest(selectedReq),
+            sx: { color: "error.main" },
+        },
+    ];
+
+    const statusOptions = ["non complete", "complete"];
 
     return (
         <Box sx={{ p: { xs: 1, md: 4 } }}>
@@ -134,15 +141,19 @@ function GetRequestBlood() {
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>#</TableCell>
-                                <TableCell>Patient Name</TableCell>
-                                <TableCell>Blood Type</TableCell>
-                                <TableCell>Units Needed</TableCell>
-                                <TableCell>Contact Number</TableCell>
-                                <TableCell>Hospital</TableCell>
-                                <TableCell>Date</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell>Action</TableCell>
+                                {[
+                                    "#",
+                                    "Patient Name",
+                                    "Blood Type",
+                                    "Units",
+                                    "Contact",
+                                    "Location",
+                                    "Date",
+                                    "Status",
+                                    "Action",
+                                ].map((head) => (
+                                    <TableCell key={head}>{head}</TableCell>
+                                ))}
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -155,27 +166,20 @@ function GetRequestBlood() {
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                filteredRequests.map((req, index) => (
-                                    <TableRow key={req._id || index} hover>
-                                        <TableCell>{index + 1}</TableCell>
+                                filteredRequests.map((req, i) => (
+                                    <TableRow key={req._id || i} hover>
+                                        <TableCell>{i + 1}</TableCell>
                                         <TableCell>{req.patient_name}</TableCell>
                                         <TableCell>
                                             <Chip label={req.blood_type} color="error" />
                                         </TableCell>
                                         <TableCell>{req.quantity}</TableCell>
                                         <TableCell>{req.contact_number}</TableCell>
-                                        <TableCell>{req.hospital_name}</TableCell>
+                                        <TableCell>{req.donation_point}</TableCell>
+                                        <TableCell>{req.request_date?.slice(0, 10)}</TableCell>
+                                        <TableCell>{statusChip(req.done_status)}</TableCell>
                                         <TableCell>
-                                            {req.request_date?.slice(0, 10)}
-                                        </TableCell>
-                                        <TableCell>
-                                            {getStatusChip(req.done_status)}
-                                        </TableCell>
-                                        <TableCell>
-                                            <IconButton
-                                                onClick={(e) => handleMenuOpen(e, req)}
-                                                size="small"
-                                            >
+                                            <IconButton onClick={(e) => handleMenuOpen(e, req)} size="small">
                                                 <MoreVertIcon />
                                             </IconButton>
                                         </TableCell>
@@ -187,7 +191,7 @@ function GetRequestBlood() {
                 </TableContainer>
             )}
 
-            {/* Action Menu */}
+            {/* Dropdown Menu */}
             <Menu
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
@@ -195,24 +199,25 @@ function GetRequestBlood() {
                 anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
                 transformOrigin={{ vertical: "top", horizontal: "right" }}
             >
-                <MenuItem onClick={() => { handleView(selectedReq); handleMenuClose(); }}>
-                    View
-                </MenuItem>
-                <MenuItem onClick={() => { handleUpdate(selectedReq); handleMenuClose(); }}>
-                    Update
-                </MenuItem>
-                <MenuItem
-                    onClick={() => {
-                        setConfirmRequest(selectedReq);
-                        handleMenuClose();
-                    }}
-                    sx={{ color: "error.main" }}
-                >
-                    Delete
-                </MenuItem>
+                {menuItems.map((item, i) =>
+                    item.link ? (
+                        <MenuItem
+                            key={i}
+                            component={Link}
+                            to={item.link}
+                            onClick={handleMenuClose}
+                        >
+                            {item.label}
+                        </MenuItem>
+                    ) : (
+                        <MenuItem key={i} onClick={() => { item.onClick(); handleMenuClose(); }} sx={item.sx}>
+                            {item.label}
+                        </MenuItem>
+                    )
+                )}
                 <Divider />
                 <ListSubheader>Change Status</ListSubheader>
-                {["non complete", "complete"].map((status) => (
+                {statusOptions.map((status) => (
                     <MenuItem
                         key={status}
                         onClick={() => {
@@ -225,11 +230,8 @@ function GetRequestBlood() {
                 ))}
             </Menu>
 
-            {/* Delete Confirmation Dialog */}
-            <Dialog
-                open={!!confirmRequest}
-                onClose={() => setConfirmRequest(null)}
-            >
+            {/* Confirm Delete Dialog */}
+            <Dialog open={!!confirmRequest} onClose={() => setConfirmRequest(null)}>
                 <DialogTitle>Delete Request</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
@@ -238,10 +240,7 @@ function GetRequestBlood() {
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button
-                        onClick={() => setConfirmRequest(null)}
-                        variant="outlined"
-                    >
+                    <Button onClick={() => setConfirmRequest(null)} variant="outlined">
                         No
                     </Button>
                     <Button

@@ -7,8 +7,12 @@ export const USER = `${baseURL}/user`;
 export const USERS = `${baseURL}/users`;
 export const ADDUSER = `${baseURL}/user/add`;
 export const USERSTATUS = `${baseURL}/user/status`;
+export const AVAILABLEDONOR = `${baseURL}/available-donor`;
 
 // Request Blood
 export const REQUESTBLOOD = `${baseURL}/request`;
+export const REQUESTBLOODLIMT = `${baseURL}/request/limit`;
 export const ADDREQUESTBLOOD = `${baseURL}/request/add`;
+export const UPDATEREQUESTBLOOD = `${baseURL}/request/update`;
 
+export const BLOODTYPES = `${baseURL}/count-by-blood-type`;

@@ -37,7 +37,6 @@ export default function UserDetails() {
             });
     }, [id]);
 
-    // Helper for role display
     const getRole = (role) => {
         switch (role?.toString()) {
             case "1995": return "Admin";
@@ -51,11 +50,10 @@ export default function UserDetails() {
     return (
         <Box
             sx={{
-                height: "100vh", // changed from minHeight
+                height: "100vh",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                // background: "linear-gradient(135deg, #e3e9f7 60%, #f5f6fa 100%)",
                 p: 2,
                 overflowX: "hidden"
             }}
@@ -102,13 +100,13 @@ export default function UserDetails() {
                             label={`ID: ${id}`}
                             size="small"
                             color="default"
-                            sx={{ mb: 1, bgcolor: "#e3e9f7", fontWeight: 500, maxWidth: "100%" }}
+                            sx={{ mb: 1, bgcolor: "#e3e9f7", fontWeight: 500 }}
                         />
                         <Chip
                             label={getRole(user.role)}
                             color="primary"
                             variant="outlined"
-                            sx={{ mb: 1, fontWeight: 500, maxWidth: "100%" }}
+                            sx={{ mb: 1, fontWeight: 500 }}
                         />
                     </Box>
                     <Divider sx={{ mb: 2 }} />
@@ -152,7 +150,14 @@ export default function UserDetails() {
                         <Box display="flex" alignItems="center" gap={1}>
                             <LocationOnIcon color="action" fontSize="small" />
                             <Typography variant="body2" sx={{ wordBreak: "break-word" }}>
-                                <strong>Address:</strong> {user.address}
+                                <strong>Address:</strong>         <a
+                                    href={`https://www.google.com/maps/search/?api=1&query=${user.address}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ color: "#1976d2", textDecoration: "underline" }}
+                                >
+                                    {user.address}
+                                </a>
                             </Typography>
                         </Box>
                     </Stack>

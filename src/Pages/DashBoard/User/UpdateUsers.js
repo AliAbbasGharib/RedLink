@@ -1,30 +1,98 @@
-import { useEffect, useState } from "react";
-import { Button, Form } from "react-bootstrap";
+import { useEffect, useRef, useState } from "react";
+import {
+    Box,
+    Button,
+    TextField,
+    MenuItem,
+    Select,
+    InputLabel,
+    FormControl,
+    Alert,
+    Typography,
+    Paper
+} from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { USER } from "../../../API/Api";
 import LoadingSubmit from "../../../Components/Loading";
+import { USER } from "../../../API/Api";
 import { Axios } from "../../../API/Axios";
 
-export default function UserUpdate() {
+export default function AddUser() {
     const [user, setUser] = useState({
         name: '',
         email: '',
-        phone_number: "",
-        role: '',
-        gender: '',
+        phone_number: '',
+        password: '',
         date_of_birth: '',
-        address: '',
+        gender: '',
         blood_type: '',
+        address: '',
         last_donation_date: '',
+        role: '',
+        donation_point_lat: null,
+        donation_point_lng: null,
+        location: { type: "Point", coordinates: [] },
     });
-    const [disable, setDisable] = useState(true);
+
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(false);
-
-  
+    const [error, setError] = useState(null);
+    const focus = useRef(null);
     const nav = useNavigate();
-    const { id } = useParams();
+    const donationPointRef = useRef(null);
+    const autocompleteRef = useRef(null);
+    function loadScript(url, callback) {
+        const existingScript = document.getElementById("googleMaps");
+        if (!existingScript) {
+            const script = document.createElement("script");
+            script.src = url;
+            script.id = "googleMaps";
+            script.async = true;
+            script.defer = true;
+            script.onload = callback;
+            document.body.appendChild(script);
+        } else {
+            callback();
+        }
+    }
+    useEffect(() => {
+        loadScript(
+            `https://maps.googleapis.com/maps/api/js?key=AIzaSyAxjQtpZsmQISacL74_I90QUGElgEre69M&libraries=places`,
+            () => {
+                if (window.google && window.google.maps) {
+                    autocompleteRef.current = new window.google.maps.places.Autocomplete(
+                        donationPointRef.current,
+                        {
+                            types: ["establishment", "geocode"],
+                            componentRestrictions: { country: "lb" },
+                            fields: ["name", "formatted_address", "geometry"],
+                        }
+                    );
 
+                    autocompleteRef.current.addListener("place_changed", () => {
+                        const place = autocompleteRef.current.getPlace();
+                        if (place && (place.name || place.formatted_address)) {
+                            const locationName = `${place.name || ""} - ${place.formatted_address || ""}`.trim();
+                            const lat = place.geometry?.location.lat();
+                            const lng = place.geometry?.location.lng();
+
+                            setUser((prev) => ({
+                                ...prev,
+                                address: locationName,
+                                donation_point_lat: lat,
+                                donation_point_lng: lng,
+                                location: {
+                                    type: "Point",
+                                    coordinates: [lng, lat], // GeoJSON format
+                                },
+                            }));
+                            setError(null);
+                        }
+                    });
+                }
+            }
+        );
+    }, []);
+
+    const { id } = useParams();
     useEffect(() => {
         setLoading(true);
         Axios.get(`${USER}/${id}`)
@@ -39,115 +107,236 @@ export default function UserUpdate() {
                     address: resp.data.data.address,
                     blood_type: resp.data.data.blood_type,
                     last_donation_date: resp.data.data.last_donation_date?.slice(0, 10) || '',
+                    donation_point_lat: resp.data.data.donation_point_lat || null,
+                    donation_point_lng: resp.data.data.donation_point_lng || null,
                 });
                 setLoading(false);
             })
-            .then(() => setDisable(false))
             .catch(() => nav("/dashbaord/users/pages/404", { replace: true }));
-    }, [nav, id]);
+    }, [nav, id])
+
+    useEffect(() => {
+        if (focus.current) focus.current.focus();
+    }, []);
+
+    function handleChange(e) {
+        setUser({ ...user, [e.target.name]: e.target.value });
+        setError(null);
+    }
 
     async function handleSubmit(e) {
-        setLoading(true);
         e.preventDefault();
+        setLoading(true);
         try {
             await Axios.put(`${USER}/update/${id}`, user);
-            nav('/dashboard/users');
-        } catch (error) {
-            setError(true);
+            nav("/dashboard/users");
+        } catch (err) {
+            setError(err.response?.data?.message || "Something went wrong");
             setLoading(false);
         }
     }
 
-    function handleUser(e) {
-        setUser({
-            ...user,
-            [e.target.name]: e.target.value
-        });
-    }
+    // Custom style for red focus border only when input is focused
+    const redInputSx = {
+        '& .MuiOutlinedInput-root': {
+            '&.Mui-focused fieldset': {
+                borderColor: '#b71c1c',
+            },
+        },
+        '& .MuiInputLabel-root.Mui-focused': {
+            color: '#b71c1c',
+        },
+        background: "#fff"
+    };
 
     return (
-        <div className="d-flex justify-content-center align-items-center min-vh-100 bg-light">
+        <Box sx={{ height: "100%", minHeight: 0, p: 0, m: 0, display: "flex", flexDirection: "column", flex: 1 }}>
             {loading && <LoadingSubmit />}
-            <Form className="bg-white shadow rounded-4 p-4 w-100" style={{ maxWidth: 500 }} onSubmit={handleSubmit}>
-                <h2 className="text-center fw-bold mb-4 text-danger">Update User</h2>
+            <Box
+                component={Paper}
+                elevation={3}
+                sx={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    borderRadius: 3,
+                    boxShadow: 4,
+                    background: "#fff",
 
-                <Form.Group className="mb-3" controlId="formBasicUserName">
-                    <Form.Label className="fw-semibold">Full Name</Form.Label>
-                    <Form.Control type="text" name="name" value={user.name} onChange={handleUser} placeholder="Enter Full Name..." />
-                    {user.name === "" && error && <p className="mt-2 text-danger small">The name field is required.</p>}
-                </Form.Group>
+                    p: { xs: 2, sm: 4 },
+                }}
+            >
+                <Typography variant="h5" fontWeight="bold" mb={2} align="center">
+                    Update User
+                </Typography>
+                {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-                <Form.Group className="mb-3" controlId="formBasicEmail">
-                    <Form.Label className="fw-semibold">Email</Form.Label>
-                    <Form.Control type="email" name="email" value={user.email} onChange={handleUser} placeholder="Enter Email..." />
-                    {user.email === "" && <p className="mt-2 text-danger small">The email field is required.</p>}
-                </Form.Group>
+                <Box component="form" onSubmit={handleSubmit} autoComplete="off" sx={{ width: "100%", maxWidth: 500, height: "100%", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                    <TextField
+                        label="Full Name"
+                        name="name"
+                        value={user.name}
+                        onChange={handleChange}
+                        inputRef={focus}
+                        required
+                        fullWidth
+                        margin="normal"
+                        sx={redInputSx}
+                    />
+                    <TextField
+                        label="Email"
+                        name="email"
+                        type="email"
+                        value={user.email}
+                        onChange={handleChange}
+                        required
+                        fullWidth
+                        margin="normal"
+                        sx={redInputSx}
+                    />
+                    <TextField
+                        label="Phone Number"
+                        name="phone_number"
+                        value={user.phone_number}
+                        onChange={handleChange}
+                        fullWidth
+                        margin="normal"
+                        sx={redInputSx}
+                    />
+                    <TextField
+                        label="Date of Birth"
+                        name="date_of_birth"
+                        type="date"
+                        value={user.date_of_birth}
+                        onChange={handleChange}
+                        required
+                        fullWidth
+                        margin="normal"
+                        InputLabelProps={{ shrink: true }}
+                        sx={redInputSx}
+                    />
+                    <FormControl fullWidth margin="normal" required sx={redInputSx}>
+                        <InputLabel>Gender</InputLabel>
+                        <Select
+                            name="gender"
+                            value={user.gender}
+                            label="Gender"
+                            onChange={handleChange}
+                        >
+                            <MenuItem value="">Select Gender</MenuItem>
+                            <MenuItem value="Male">Male</MenuItem>
+                            <MenuItem value="Female">Female</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <FormControl fullWidth margin="normal" required sx={redInputSx}>
+                        <InputLabel>Blood Type</InputLabel>
+                        <Select
+                            name="blood_type"
+                            value={user.blood_type}
+                            label="Blood Type"
+                            onChange={handleChange}
+                        >
+                            <MenuItem value="">Select Blood Type</MenuItem>
+                            <MenuItem value="A+">A+</MenuItem>
+                            <MenuItem value="A-">A-</MenuItem>
+                            <MenuItem value="B+">B+</MenuItem>
+                            <MenuItem value="B-">B-</MenuItem>
+                            <MenuItem value="AB+">AB+</MenuItem>
+                            <MenuItem value="AB-">AB-</MenuItem>
+                            <MenuItem value="O+">O+</MenuItem>
+                            <MenuItem value="O-">O-</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <TextField
+                        label="*Address"
+                        name="address"
+                        placeholder="Start typing a location..."
+                        value={user.address || ""}
+                        onChange={handleChange}
+                        inputRef={donationPointRef}
+                        fullWidth
+                        required
+                        sx={{ mb: 1 }}
+                        helperText="Choose a location from the suggestions."
+                    />
+                    {user.address && (
+                        <Box mb={2}>
+                            <Typography fontWeight="bold" mb={1}>Map Preview</Typography>
+                            <Box sx={{ height: 300, width: "100%", borderRadius: 2, overflow: "hidden" }}>
+                                <iframe
+                                    title="Google Maps Location"
+                                    width="100%"
+                                    height="100%"
+                                    style={{ border: 0 }}
+                                    loading="lazy"
+                                    allowFullScreen
+                                    src={
+                                        user.donation_point_lat && user.donation_point_lng
+                                            ? `https://www.google.com/maps/embed/v1/view?key=AIzaSyAxjQtpZsmQISacL74_I90QUGElgEre69M&center=${user.donation_point_lat},${user.donation_point_lng}&zoom=16`
+                                            : `https://www.google.com/maps/embed/v1/place?key=AIzaSyAxjQtpZsmQISacL74_I90QUGElgEre69M&q=${encodeURIComponent(user.address)}`
+                                    }
+                                />
+                            </Box>
+                        </Box>
+                    )}
 
-                <Form.Group className="mb-3" controlId="formBasicPhoneNumber">
-                    <Form.Label className="fw-semibold">Phone Number</Form.Label>
-                    <Form.Control type="number" name="phone_number" value={user.phone_number} onChange={handleUser} placeholder="Enter Phone Number..." />
-                </Form.Group>
+                    {/* Debug Coordinates Display */}
+                    {user.location?.coordinates?.length > 0 && (
+                        <Alert severity="info" sx={{ mb: 2 }}>
+                            Coordinates: {user.location.coordinates[1]} (lat), {user.location.coordinates[0]} (lng)
+                        </Alert>
+                    )}
 
-                <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">Gender</Form.Label>
-                    <Form.Select name="gender" value={user.gender} onChange={handleUser}>
-                        <option disabled value="">Select Gender</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                    </Form.Select>
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">Date of Birth</Form.Label>
-                    <Form.Control type="date" name="date_of_birth" value={user.date_of_birth} onChange={handleUser} />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">Last Donation Date</Form.Label>
-                    <Form.Control type="date" name="last_donation_date" value={user.last_donation_date} onChange={handleUser} />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">Address</Form.Label>
-                    <Form.Control type="text" name="address" value={user.address} onChange={handleUser} placeholder="Enter Address..." />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                    <Form.Label className="fw-semibold">Blood Type</Form.Label>
-                    <Form.Select name="blood_type" value={user.blood_type} onChange={handleUser}>
-                        <option disabled value="">Select Blood Type</option>
-                        <option value="A+">A+</option>
-                        <option value="A-">A-</option>
-                        <option value="B+">B+</option>
-                        <option value="B-">B-</option>
-                        <option value="AB+">AB+</option>
-                        <option value="AB-">AB-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
-                    </Form.Select>
-                </Form.Group>
-
-                <Form.Group className="mb-3" controlId="formBasicRole">
-                    <Form.Label className="fw-semibold">Role</Form.Label>
-                    <Form.Select name="role" value={user.role} onChange={handleUser} required>
-                        <option value="">Select Role</option>
-                        <option value={1995}>Admin</option>
-                        <option value={1996}>Hospital</option>
-                        <option value={1999}>Patient</option>
-                        <option value={2001}>Doner</option>
-                    </Form.Select>
-                    {user.role === "" && <p className="mt-2 text-danger small">The role field is required.</p>}
-                </Form.Group>
-
-                <Button
-                    disabled={disable}
-                    variant="danger"
-                    className="w-100 fw-bold py-2 mt-2"
-                    type="submit"
-                >
-                    Save
-                </Button>
-            </Form>
-        </div>
+                    <TextField
+                        label="Last Donation Date"
+                        name="last_donation_date"
+                        type="date"
+                        value={user.last_donation_date}
+                        onChange={handleChange}
+                        fullWidth
+                        margin="normal"
+                        InputLabelProps={{ shrink: true }}
+                        sx={redInputSx}
+                    />
+                    <FormControl fullWidth margin="normal" required sx={redInputSx}>
+                        <InputLabel>Role</InputLabel>
+                        <Select
+                            name="role"
+                            value={user.role}
+                            label="Role"
+                            onChange={handleChange}
+                        >
+                            <MenuItem value="">Select Role</MenuItem>
+                            <MenuItem value={1995}>Admin</MenuItem>
+                            <MenuItem value={1996}>Hospital</MenuItem>
+                            <MenuItem value={1999}>Patient</MenuItem>
+                            <MenuItem value={2001}>Donor</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <Button
+                        variant="contained"
+                        color="error"
+                        type="submit"
+                        fullWidth
+                        sx={{
+                            mt: 2,
+                            boxShadow: "none",
+                            fontWeight: "bold",
+                            '&:hover': {
+                                backgroundColor: "#fff",
+                                color: "#b71c1c",
+                            }
+                        }}
+         
+                    >
+                        Update 
+                    </Button>
+                </Box>
+            </Box>
+        </Box>
     );
 }
+
+

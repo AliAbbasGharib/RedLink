@@ -16,6 +16,7 @@ import {
     ListItemIcon,
     ListItemText,
 } from "@mui/material";
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
 import BloodtypeIcon from "@mui/icons-material/Bloodtype";
@@ -35,6 +36,7 @@ import { Axios } from "../../API/Axios";
 export default function NavBar({ onAboutClick }) {
     const navigate = useNavigate();
     const [name, setName] = useState("");
+    const [role, setRole] = useState("");
     const [anchorEl, setAnchorEl] = useState(null);
     const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
 
@@ -54,6 +56,7 @@ export default function NavBar({ onAboutClick }) {
                 })
                 .then((res) => {
                     setName(res.data.name);
+                    setRole(res.data.role);
                 })
                 .catch(() => { });
         }
@@ -201,6 +204,7 @@ export default function NavBar({ onAboutClick }) {
                                         )}
                                     </IconButton>
                                 </Tooltip>
+
                                 <Menu
                                     anchorEl={anchorEl}
                                     open={Boolean(anchorEl)}
@@ -219,6 +223,12 @@ export default function NavBar({ onAboutClick }) {
                                             <AccountCircleIcon fontSize="small" />
                                         </ListItemIcon>
                                         <ListItemText>{name}</ListItemText>
+                                    </MenuItem>
+                                    <MenuItem style={{ display: role === "1995" || role === "1996" ? "flex" : "none" }}>
+                                        <ListItemIcon>
+                                            <DashboardIcon fontSize="small" />
+                                        </ListItemIcon>
+                                        <ListItemText onClick={() => navigate("/dashboard")}>Dashboard</ListItemText>
                                     </MenuItem>
                                     <MenuItem onClick={handleLogOut}>
                                         <ListItemIcon>
@@ -306,12 +316,20 @@ export default function NavBar({ onAboutClick }) {
                                             </ListItemIcon>
                                             <ListItemText>{name}</ListItemText>
                                         </MenuItem>
+                                        <MenuItem style={{ display: role === "1995" || role === "1996" ? "flex" : "none" }}>
+                                            <ListItemIcon>
+                                                <DashboardIcon fontSize="small" />
+                                            </ListItemIcon>
+                                            <ListItemText onClick={() => navigate("/dashboard")}>Dashboard</ListItemText>
+                                        </MenuItem>
+
                                         <MenuItem onClick={() => { handleLogOut(); handleMobileMenuClose(); }}>
                                             <ListItemIcon>
                                                 <LogoutIcon fontSize="small" />
                                             </ListItemIcon>
                                             <ListItemText>Logout</ListItemText>
                                         </MenuItem>
+
                                     </>
                                 )}
                             </Menu>

@@ -16,6 +16,10 @@ import UserDetails from './Pages/DashBoard/User/UserDetails';
 import GetRequestBlood from './Pages/DashBoard/RequestBlood/GetRequestBlood';
 import UserAddRequestBlood from './Pages/Website/RequestBlood/UserAddRequestBlood';
 import Contact from './Pages/Website/ContactUS';
+import UpdateRequestBlood from './Pages/DashBoard/RequestBlood/UpdateRequestBlood';
+import UserRequestBloodDetails from './Pages/Website/RequestBlood/UserRequestBloodDetail';
+import AvailableDonor from './Pages/DashBoard/User/AvailableDonor';
+import StaticPage from './Pages/DashBoard/StaticPage';
 
 function App() {
   return (
@@ -25,22 +29,28 @@ function App() {
         <Route path="contact" element={<Contact />} />
         <Route path="/request-blood" element={<BloodRequests />} />
         <Route path="/request-blood/add-request" element={<UserAddRequestBlood />} />
+        <Route path="/request-blood/:id" element={<UserRequestBloodDetails />} />
+
         <Route element={<RequireBack />}>
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
         </Route>
         <Route path="/*" element={<Err404 />} />
-        <Route element={<RequireAuth allowedRole={['1995', '1996', '1999']} />}>
+        <Route element={<RequireAuth allowedRole={['1995', '1996']} />}>
           <Route path="/dashboard" element={<DashBoard />}>
-            <Route element={<RequireAuth allowedRole={['1995']} />}>
+            <Route index element={<StaticPage />} />
+            <Route element={<RequireAuth allowedRole={['1995', '1996']} />}>
+              <Route path="/dashboard/dashboard" element={<StaticPage />} />
               <Route path="users" element={<Users />} />
               <Route path="user/add" element={<AddUsers />} />
               <Route path="users/:id" element={<UpdateUser />} />
               <Route path="users/details/:id" element={<UserDetails />} />
             </Route>
+            <Route path="available-donor" element={<AvailableDonor />} />
             <Route>
               <Route path="request" element={<GetRequestBlood />} />
               <Route path="request/add" element={<AddRequestBlood />} />
+              <Route path='request/:id' element={<UpdateRequestBlood />} />
             </Route>
           </Route>
         </Route>
