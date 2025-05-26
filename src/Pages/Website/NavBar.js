@@ -11,10 +11,11 @@ import {
     Container,
     Avatar,
     Tooltip,
-    useMediaQuery,
-    useTheme,
+    Badge,
     ListItemIcon,
     ListItemText,
+    useMediaQuery,
+    useTheme,
 } from "@mui/material";
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import MenuIcon from "@mui/icons-material/Menu";
@@ -27,18 +28,28 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import LoginIcon from "@mui/icons-material/Login";
 import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
+import LanguageIcon from "@mui/icons-material/Language";
+import NotificationsIcon from '@mui/icons-material/Notifications';
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import Cookie from "cookie-universal";
-import { LOGOUT, USER } from "../../API/Api";
+import { LOGOUT, NOTIFICATIONS, USER } from "../../API/Api";
 import { Axios } from "../../API/Axios";
+import { useTranslation } from "react-i18next";
 
 export default function NavBar({ onAboutClick }) {
     const navigate = useNavigate();
+    const { t, i18n } = useTranslation();
+
     const [name, setName] = useState("");
     const [role, setRole] = useState("");
     const [anchorEl, setAnchorEl] = useState(null);
     const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
+    const [langMenuAnchor, setLangMenuAnchor] = useState(null);
+
+    // Notification state and anchor for dropdown
+    const [notifAnchorEl, setNotifAnchorEl] = useState(null);
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -48,68 +59,76 @@ export default function NavBar({ onAboutClick }) {
 
     useEffect(() => {
         if (token) {
-            axios
-                .get(USER, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                })
+            Axios.get(USER)
                 .then((res) => {
                     setName(res.data.name);
                     setRole(res.data.role);
                 })
                 .catch(() => { });
+
+            // Fetch notifications
+            fetchNotifications();
         }
     }, [token]);
 
-    const handleMenuOpen = (event) => {
-        setAnchorEl(event.currentTarget);
+    const fetchNotifications = async () => {
+        try {
+            // Replace this URL with your actual notifications API endpoint
+            const response = await Axios.get(NOTIFICATIONS);
+
+            setNotifications(response.data.notifications || []);
+
+            // Count unread notifications
+            const unread = response.data.notifications?.filter(n => !n.read).length || 0;
+            setUnreadCount(unread);
+        } catch (error) {
+            console.error("Failed to fetch notifications:", error);
+        }
     };
 
-    const handleMenuClose = () => {
-        setAnchorEl(null);
+    const handleNotifMenuOpen = (event) => {
+        setNotifAnchorEl(event.currentTarget);
+        setUnreadCount(0); 
+    };
+    const handleNotifMenuClose = () => setNotifAnchorEl(null);
+
+    const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+    const handleMenuClose = () => setAnchorEl(null);
+    const handleMobileMenuOpen = (event) => setMobileMenuAnchor(event.currentTarget);
+    const handleMobileMenuClose = () => setMobileMenuAnchor(null);
+    const handleLangMenuOpen = (event) => setLangMenuAnchor(event.currentTarget);
+    const handleLangMenuClose = () => setLangMenuAnchor(null);
+
+    const changeLanguage = (lng) => {
+        i18n.changeLanguage(lng);
+        handleLangMenuClose();
     };
 
-    const handleMobileMenuOpen = (event) => {
-        setMobileMenuAnchor(event.currentTarget);
-    };
-
-    const handleMobileMenuClose = () => {
-        setMobileMenuAnchor(null);
-    };
-
-    const handleRegister = () => {
-        navigate("/register");
-    };
-
-    const handleLogin = () => {
-        navigate("/login");
-    };
+    const handleRegister = () => navigate("/register");
+    const handleLogin = () => navigate("/login");
 
     async function handleLogOut() {
         try {
-            await Axios.post(LOGOUT).then(() => {
-                cookie.remove("token");
-                window.location.pathname = "/login";
-            });
+            await Axios.post(LOGOUT);
+            cookie.remove("token");
+            window.location.pathname = "/login";
         } catch (error) {
             console.log(error);
         }
     }
 
     const navLinks = [
-        { label: "Home", to: "/", icon: <HomeIcon sx={{ mr: 1 }} /> },
-        { label: "Request Blood", to: "/request-blood", icon: <BloodtypeIcon sx={{ mr: 1 }} /> },
-        { label: "Give Blood", to: "/give-blood", icon: <VolunteerActivismIcon sx={{ mr: 1 }} /> },
-        { label: "About Us", onClick: onAboutClick, icon: <InfoIcon sx={{ mr: 1 }} /> },
-        { label: "Contact Us", to: "/contact", icon: <ContactMailIcon sx={{ mr: 1 }} /> },
+        { label: t("home"), to: "/", icon: <HomeIcon sx={{ marginInlineEnd: 1 }} /> },
+        { label: t("requestBlood"), to: "/request-blood", icon: <BloodtypeIcon sx={{ marginInlineEnd: 1 }} /> },
+        { label: t("giveBlood"), to: "/give-blood", icon: <VolunteerActivismIcon sx={{ marginInlineEnd: 1 }} /> },
+        { label: t("aboutUs"), onClick: onAboutClick, icon: <InfoIcon sx={{ marginInlineEnd: 1 }} /> },
+        { label: t("contactUs"), to: "/contact", icon: <ContactMailIcon sx={{ marginInlineEnd: 1 }} /> },
     ];
 
     return (
         <AppBar position="fixed" color="inherit" elevation={2} sx={{ borderBottom: "1px solid #eee" }}>
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
-                    {/* Logo */}
                     <Typography
                         variant="h6"
                         noWrap
@@ -126,7 +145,6 @@ export default function NavBar({ onAboutClick }) {
                         →RedLink
                     </Typography>
 
-                    {/* Desktop Menu */}
                     {!isMobile && (
                         <Box sx={{ flexGrow: 1, display: "flex", gap: 2 }}>
                             {navLinks.map((item) =>
@@ -137,7 +155,7 @@ export default function NavBar({ onAboutClick }) {
                                         to={item.to}
                                         startIcon={item.icon}
                                         sx={{
-                                            color: item.label === "Home" ? "rgb(192, 23, 23)" : "#222",
+                                            color: item.label === t("home") ? "rgb(192, 23, 23)" : "#222",
                                             fontWeight: 700,
                                             textTransform: "none",
                                             fontSize: 16,
@@ -166,7 +184,70 @@ export default function NavBar({ onAboutClick }) {
                         </Box>
                     )}
 
-                    {/* Right Side */}
+                    <Box sx={{ ml: 2, display: "flex", alignItems: "center", gap: 2 }}>
+                        {/* Notification Icon */}
+                        {token && (
+                            <>
+                                <Tooltip title={t("notifications")}>
+                                    <IconButton
+                                        color="inherit"
+                                        onClick={handleNotifMenuOpen}
+                                        aria-controls={Boolean(notifAnchorEl) ? 'notif-menu' : undefined}
+                                        aria-haspopup="true"
+                                        aria-expanded={Boolean(notifAnchorEl) ? 'true' : undefined}
+                                    >
+                                        <Badge badgeContent={unreadCount} color="error">
+                                            <NotificationsIcon />
+                                        </Badge>
+                                    </IconButton>
+                                </Tooltip>
+                                <Menu
+                                    id="notif-menu"
+                                    anchorEl={notifAnchorEl}
+                                    open={Boolean(notifAnchorEl)}
+                                    onClose={handleNotifMenuClose}
+                                    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                                    transformOrigin={{ vertical: "top", horizontal: "right" }}
+                                    PaperProps={{ sx: { maxHeight: 300, width: '300px' } }}
+                                >
+                                    {notifications.length === 0 && (
+                                        <MenuItem disabled>{t("noNotifications")}</MenuItem>
+                                    )}
+                                    {notifications.map((notif, index) => (
+                                        <MenuItem
+                                            key={index}
+                                            onClick={() => {
+                                                // Handle notification click (e.g., navigate or mark read)
+                                                console.log("Notification clicked:", notif);
+                                                handleNotifMenuClose();
+                                            }}
+                                            sx={{ whiteSpace: "normal", py: 1 }}
+                                        >
+                                            {notif.body || JSON.stringify(notif)}
+                                        </MenuItem>
+                                    ))}
+                                </Menu>
+                            </>
+                        )}
+
+                        {/* Language Selector */}
+                        <Tooltip title={t("language")}>
+                            <IconButton onClick={handleLangMenuOpen} color="inherit">
+                                <LanguageIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Menu
+                            anchorEl={langMenuAnchor}
+                            open={Boolean(langMenuAnchor)}
+                            onClose={handleLangMenuClose}
+                            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                            transformOrigin={{ vertical: "top", horizontal: "right" }}
+                        >
+                            <MenuItem onClick={() => changeLanguage("en")}>🇺🇸 English</MenuItem>
+                            <MenuItem onClick={() => changeLanguage("ar")}>🇸🇦 العربية</MenuItem>
+                        </Menu>
+                    </Box>
+
                     <Box sx={{ flexGrow: 0, ml: "auto" }}>
                         {!token ? (
                             <Box sx={{ display: "flex", gap: 1 }}>
@@ -177,7 +258,7 @@ export default function NavBar({ onAboutClick }) {
                                     startIcon={<PersonAddAltIcon />}
                                     sx={{ borderRadius: 3, fontWeight: 600, px: 3 }}
                                 >
-                                    SignIn
+                                    {t("signIn")}
                                 </Button>
                                 <Button
                                     variant="contained"
@@ -186,12 +267,12 @@ export default function NavBar({ onAboutClick }) {
                                     startIcon={<LoginIcon />}
                                     sx={{ borderRadius: 3, fontWeight: 600, px: 3 }}
                                 >
-                                    Login
+                                    {t("login")}
                                 </Button>
                             </Box>
                         ) : (
                             <>
-                                <Tooltip title={name || "Account"}>
+                                <Tooltip title={name || t("account")}>
                                     <IconButton onClick={handleMenuOpen} sx={{ p: 0, ml: 1 }}>
                                         {name ? (
                                             <Avatar sx={{ bgcolor: "rgb(192, 23, 23)" }}>
@@ -209,14 +290,8 @@ export default function NavBar({ onAboutClick }) {
                                     anchorEl={anchorEl}
                                     open={Boolean(anchorEl)}
                                     onClose={handleMenuClose}
-                                    anchorOrigin={{
-                                        vertical: "bottom",
-                                        horizontal: "right",
-                                    }}
-                                    transformOrigin={{
-                                        vertical: "top",
-                                        horizontal: "right",
-                                    }}
+                                    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                                    transformOrigin={{ vertical: "top", horizontal: "right" }}
                                 >
                                     <MenuItem disabled>
                                         <ListItemIcon>
@@ -224,24 +299,29 @@ export default function NavBar({ onAboutClick }) {
                                         </ListItemIcon>
                                         <ListItemText>{name}</ListItemText>
                                     </MenuItem>
-                                    <MenuItem style={{ display: role === "1995" || role === "1996" ? "flex" : "none" }}>
+                                    <MenuItem
+                                        style={{ display: role === "1995" || role === "1996" ? "flex" : "none" }}
+                                        onClick={() => {
+                                            navigate("/dashboard");
+                                            handleMenuClose();
+                                        }}
+                                    >
                                         <ListItemIcon>
                                             <DashboardIcon fontSize="small" />
                                         </ListItemIcon>
-                                        <ListItemText onClick={() => navigate("/dashboard")}>Dashboard</ListItemText>
+                                        <ListItemText>{t("dashboard")}</ListItemText>
                                     </MenuItem>
                                     <MenuItem onClick={handleLogOut}>
                                         <ListItemIcon>
                                             <LogoutIcon fontSize="small" />
                                         </ListItemIcon>
-                                        <ListItemText>Logout</ListItemText>
+                                        <ListItemText>{t("logout")}</ListItemText>
                                     </MenuItem>
                                 </Menu>
                             </>
                         )}
                     </Box>
 
-                    {/* Mobile Menu Icon */}
                     {isMobile && (
                         <>
                             <IconButton
@@ -258,14 +338,8 @@ export default function NavBar({ onAboutClick }) {
                                 anchorEl={mobileMenuAnchor}
                                 open={Boolean(mobileMenuAnchor)}
                                 onClose={handleMobileMenuClose}
-                                anchorOrigin={{
-                                    vertical: "bottom",
-                                    horizontal: "right",
-                                }}
-                                transformOrigin={{
-                                    vertical: "top",
-                                    horizontal: "right",
-                                }}
+                                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                                transformOrigin={{ vertical: "top", horizontal: "right" }}
                             >
                                 {navLinks.map((item) =>
                                     item.to ? (
@@ -299,13 +373,13 @@ export default function NavBar({ onAboutClick }) {
                                             <ListItemIcon>
                                                 <PersonAddAltIcon fontSize="small" />
                                             </ListItemIcon>
-                                            <ListItemText>SignIn</ListItemText>
+                                            <ListItemText>{t("signIn")}</ListItemText>
                                         </MenuItem>
                                         <MenuItem onClick={() => { handleLogin(); handleMobileMenuClose(); }}>
                                             <ListItemIcon>
                                                 <LoginIcon fontSize="small" />
                                             </ListItemIcon>
-                                            <ListItemText>Login</ListItemText>
+                                            <ListItemText>{t("login")}</ListItemText>
                                         </MenuItem>
                                     </>
                                 ) : (
@@ -316,20 +390,29 @@ export default function NavBar({ onAboutClick }) {
                                             </ListItemIcon>
                                             <ListItemText>{name}</ListItemText>
                                         </MenuItem>
-                                        <MenuItem style={{ display: role === "1995" || role === "1996" ? "flex" : "none" }}>
+                                        <MenuItem
+                                            style={{ display: role === "1995" || role === "1996" ? "flex" : "none" }}
+                                            onClick={() => {
+                                                navigate("/dashboard");
+                                                handleMobileMenuClose();
+                                            }}
+                                        >
                                             <ListItemIcon>
                                                 <DashboardIcon fontSize="small" />
                                             </ListItemIcon>
-                                            <ListItemText onClick={() => navigate("/dashboard")}>Dashboard</ListItemText>
+                                            <ListItemText>{t("dashboard")}</ListItemText>
                                         </MenuItem>
-
-                                        <MenuItem onClick={() => { handleLogOut(); handleMobileMenuClose(); }}>
+                                        <MenuItem
+                                            onClick={() => {
+                                                handleLogOut();
+                                                handleMobileMenuClose();
+                                            }}
+                                        >
                                             <ListItemIcon>
                                                 <LogoutIcon fontSize="small" />
                                             </ListItemIcon>
-                                            <ListItemText>Logout</ListItemText>
+                                            <ListItemText>{t("logout")}</ListItemText>
                                         </MenuItem>
-
                                     </>
                                 )}
                             </Menu>

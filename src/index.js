@@ -12,6 +12,7 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter as Router } from 'react-router-dom';
 import MenuContext from './Context/MenuContext';
 import WindowContext from './Context/WindowContext';
+import './i18n';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

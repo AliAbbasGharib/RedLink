@@ -1,4 +1,6 @@
+import React, { useEffect } from 'react';
 import { Route, Routes } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import Home from './Pages/Website/Home';
 import Register from './Pages/Auth/Register';
@@ -22,6 +24,18 @@ import AvailableDonor from './Pages/DashBoard/User/AvailableDonor';
 import StaticPage from './Pages/DashBoard/StaticPage';
 
 function App() {
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    if (i18n.language === 'ar') {
+      document.documentElement.dir = 'rtl';
+    } else {
+      document.documentElement.dir = 'ltr';
+    }
+    // Optionally set lang attribute too
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+
   return (
     <div className="App">
       <Routes>
@@ -50,7 +64,7 @@ function App() {
             <Route>
               <Route path="request" element={<GetRequestBlood />} />
               <Route path="request/add" element={<AddRequestBlood />} />
-              <Route path='request/:id' element={<UpdateRequestBlood />} />
+              <Route path="request/:id" element={<UpdateRequestBlood />} />
             </Route>
           </Route>
         </Route>

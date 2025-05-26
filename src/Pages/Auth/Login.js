@@ -158,6 +158,14 @@ export default function Login() {
                         >
                             Login
                         </Button>
+
+                        {/* Register link message */}
+                        <Typography variant="body2" align="center" sx={{ mt: 2 }}>
+                            Don't have an account?{" "}
+                            <a href="/register" style={{ color: "#d32f2f", textDecoration: "none", fontWeight: "bold" }}>
+                                Register here
+                            </a>
+                        </Typography>
                     </Box>
                 </Paper>
             </Container>

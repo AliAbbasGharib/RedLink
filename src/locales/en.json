@@ -1,0 +1,50 @@
+{
+        "home": "Home",
+    "requestBlood": "Request Blood",
+    "giveBlood": "Give Blood",
+    "aboutUs": "About Us",
+    "contactUs": "Contact Us",
+    "signIn": "Sign In",
+    "login": "Login",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "language": "Language",
+    "account": "Account",
+    "hero": {
+        "badge": "NEW",
+        "subtitle": "Stay connected to receive donations",
+        "title": "Every dot blinking is someone in need of blood, now.",
+        "highlight": "now",
+        "description": "Check the live map and help save a life."
+    },
+    "infoSection": {
+        "title": "No one should stress or even die from a blood shortage in Lebanon",
+        "paragraph1": "Much blood has been wasted in the streets of Lebanon throughout its history.",
+        "paragraph2": "Yet, blood banks are almost empty and families of patients in need of blood struggle to find potential donors, every day.",
+        "paragraph3": "The pressure of finding blood for a loved one is an added burden the families should not bear alone.",
+        "paragraph4": "Our mission is to improve the anonymous and voluntary blood donation system in Lebanon, and for that, we created a movement."
+    },
+    "cards": {
+        "title": "Roll up your sleeves and join the movement!",
+        "card1": {
+            "title": "Give Blood",
+            "desc": "Make it your new healthy and life-saving habit!",
+            "button": "Donate Blood"
+        },
+        "card2": {
+            "title": "Give Time",
+            "desc": "Want to become an active citizen in your community?",
+            "button": "Read More"
+        },
+        "card3": {
+            "title": "Give Space",
+            "desc": "Use your space to spread awareness and encourage",
+            "button": "Read More"
+        }
+    },
+    "about": {
+        "title": "About Us",
+        "paragraph1": "At LifePulse, our mission is to connect generous donors with those in urgent need of blood. We believe that one drop can make a world of difference, and our platform helps facilitate safe, quick, and impactful donations.",
+        "paragraph2": "Founded in 2025, we aim to bridge the gap between blood donors and hospitals, ensuring no life is lost due to shortage. Join us in this life-saving journey and become a hero today."
+    }
+}

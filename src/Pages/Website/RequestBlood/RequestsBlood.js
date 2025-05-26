@@ -13,7 +13,9 @@ import {
     MenuItem,
     IconButton,
     Menu,
-    Pagination
+    Pagination,
+    Alert,
+    Snackbar
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -22,7 +24,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import NavBar from "../NavBar";
 import { Axios } from "../../../API/Axios";
 import { REQUESTBLOOD, REQUESTBLOODLIMT, USER } from "../../../API/Api";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Cookie from "cookie-universal";
 
 const cookies = Cookie();
@@ -37,6 +39,7 @@ export default function RequestBloodCardList() {
     const [selectedReq, setSelectedReq] = useState(null);
     const [user, setUser] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [openAlert, setOpenAlert] = useState(false);
     const requestsPerPage = 12;
 
     useEffect(() => {
@@ -71,6 +74,8 @@ export default function RequestBloodCardList() {
     const indexOfLastRequest = currentPage * requestsPerPage;
     const indexOfFirstRequest = indexOfLastRequest - requestsPerPage;
     const currentRequests = filteredRequests.slice(indexOfFirstRequest, indexOfLastRequest);
+    const navigate = useNavigate();
+
 
     const getStatusChip = (status) =>
         status === "complete"
@@ -109,6 +114,16 @@ export default function RequestBloodCardList() {
         handleMenuClose();
     };
 
+    const handleNavigation = () => {
+        if (token) {
+            navigate("/request-blood/add-request");
+        } else {
+            setOpenAlert(true); // Show MUI alert
+            setTimeout(() => {
+                navigate("/login");
+            }, 2000); // Wait 2 seconds before navigating to login
+        }
+    };
     const canManageRequest = (request) => {
         if (!user) return false;
         const requestUserId = typeof request.user_id === "object" ? request.user_id._id : request.user_id;
@@ -129,12 +144,21 @@ export default function RequestBloodCardList() {
                         <Button
                             variant="contained"
                             color="error"
-                            component={Link}
-                            to="/request-blood/add-request"
+                            onClick={handleNavigation}
                             sx={{ color: "#fff", fontWeight: "bold", textTransform: "none", boxShadow: 2, px: 3 }}
                         >
                             Add Request
                         </Button>
+                        <Snackbar
+                            open={openAlert}
+                            autoHideDuration={2000}
+                            onClose={() => setOpenAlert(false)}
+                            anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                        >
+                            <Alert severity="warning" onClose={() => setOpenAlert(false)} sx={{ width: '100%' }}>
+                                You must register before accessing this page!
+                            </Alert>
+                        </Snackbar>
                     </Box>
 
                     <Box display="flex" gap={3} mb={3} flexDirection={{ xs: "column", sm: "row" }}>

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useTranslation } from 'react-i18next';
 import {
     Container,
     Grid,
@@ -19,6 +20,7 @@ import NavBar from './NavBar';
 import Footer from './Footer';
 
 export default function Home() {
+    const { t } = useTranslation();
     const cardRefs = useRef([]);
     const sectionRef = useRef(null);
     const [isVisible, setIsVisible] = useState(false);
@@ -59,6 +61,24 @@ export default function Home() {
         return () => observer.disconnect();
     }, []);
 
+    // Helper to split the hero title string and highlight "now" with styling
+    const renderHeroTitle = () => {
+        const fullTitle = t('hero.title');
+        const highlight = t('hero.highlight');
+        const parts = fullTitle.split(highlight);
+
+        return parts.map((part, index) =>
+            index < parts.length - 1 ? (
+                <React.Fragment key={index}>
+                    {part}
+                    <Box component="span" sx={{ color: "#ffe082" }}>{highlight}</Box>
+                </React.Fragment>
+            ) : (
+                part
+            )
+        );
+    };
+
     return (
         <>
             <NavBar onAboutClick={() => {
@@ -81,12 +101,12 @@ export default function Home() {
                         <Grid item xs={12} md={8}>
                             <Box mb={3} mt={5}>
                                 <Badge
-                                    badgeContent="NEW"
+                                    badgeContent={t('hero.badge')}
                                     color="warning"
                                     sx={{ mr: 2, fontWeight: 700 }}
                                 />
                                 <Typography variant="subtitle1" component="span">
-                                    Stay connected to receive donations
+                                    {t('hero.subtitle')}
                                 </Typography>
                             </Box>
                             <Typography
@@ -98,14 +118,13 @@ export default function Home() {
                                     mb: 2,
                                 }}
                             >
-                                Every dot blinking is someone in need of blood,{" "}
-                                <Box component="span" sx={{ color: "#ffe082" }}>now</Box>.
+                                {renderHeroTitle()}
                             </Typography>
                             <Typography
                                 variant="h5"
                                 sx={{ color: "rgb(240, 232, 232)" }}
                             >
-                                Check the live map and help save a life.
+                                {t('hero.description')}
                             </Typography>
                         </Grid>
                     </Grid>
@@ -117,26 +136,26 @@ export default function Home() {
                 <Grid container alignItems="center" spacing={4}>
                     <Grid item xs={12} md={6}>
                         <Typography variant="h4" color="error" gutterBottom>
-                            No one should stress or even die from a blood shortage in Lebanon
+                            {t('infoSection.title')}
                         </Typography>
                         <Typography variant="body1" paragraph>
-                            Much blood has been wasted in the streets of Lebanon throughout its history.
+                            {t('infoSection.paragraph1')}
                         </Typography>
                         <Typography variant="body1" paragraph>
-                            Yet, blood banks are almost empty and families of patients in need of blood struggle to find potential donors, every day.
+                            {t('infoSection.paragraph2')}
                         </Typography>
                         <Typography variant="body1" paragraph>
-                            The pressure of finding blood for a loved one is an added burden the families should not bear alone.
+                            {t('infoSection.paragraph3')}
                         </Typography>
                         <Typography variant="body1" paragraph>
-                            Our mission is to improve the anonymous and voluntary blood donation system in Lebanon, and for that, we created a movement.
+                            {t('infoSection.paragraph4')}
                         </Typography>
                     </Grid>
                     <Grid item xs={12} md={6}>
                         <Box
                             component="img"
                             src="https://dsclebanon.org/static/assets/images/all-lives/all_lives_en.gif"
-                            alt="Our Team"
+                            alt={t('about.title')}
                             sx={{
                                 width: "100%",
                                 borderRadius: 3,
@@ -157,7 +176,7 @@ export default function Home() {
                         fontWeight="bold"
                         mb={4}
                     >
-                        Roll up your sleeves and join the movement!
+                        {t('joinMovement')}
                     </Typography>
                     <Grid container spacing={4} justifyContent="center">
                         {/* Card 1 */}
@@ -180,14 +199,14 @@ export default function Home() {
                                     component="img"
                                     height="200"
                                     image="https://media.istockphoto.com/id/1492669234/photo/mid-adult-man-taking-iv-drip-in-the-hospital.jpg?s=1024x1024&w=is&k=20&c=II5HQ-_A94XjkZbXHQtAmZ7T54Rb3CKJRXpmHGkgjgc="
-                                    alt="Give Blood"
+                                    alt={t('cards.card1.title')}
                                 />
                                 <CardContent>
                                     <Typography variant="h6" color="error" fontWeight="bold">
-                                        Give Blood
+                                        {t('cards.card1.title')}
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary">
-                                        Make it your new healthy and life-saving habit!
+                                        {t('cards.card1.description')}
                                     </Typography>
                                 </CardContent>
                                 <CardActions>
@@ -202,11 +221,12 @@ export default function Home() {
                                             ml: 1,
                                         }}
                                     >
-                                        Donate Blood
+                                        {t('cards.card1.button')}
                                     </Button>
                                 </CardActions>
                             </Card>
                         </Grid>
+
                         {/* Card 2 */}
                         <Grid item xs={12} sm={6} md={4}>
                             <Card
@@ -227,14 +247,14 @@ export default function Home() {
                                     component="img"
                                     height="200"
                                     image="https://media.istockphoto.com/id/534831801/photo/phlebotomist-preparing-patient-to-donate-blood-in-hospital-lab.jpg?s=1024x1024&w=is&k=20&c=L7gowzIqovSPAYGbLp5luoh1Jyd5G9Bi-e-OZRKNj0g="
-                                    alt="Give Time"
+                                    alt={t('cards.card2.title')}
                                 />
                                 <CardContent>
                                     <Typography variant="h6" color="error" fontWeight="bold">
-                                        Give Time
+                                        {t('cards.card2.title')}
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary">
-                                        Want to become an active citizen in your community?
+                                        {t('cards.card2.description')}
                                     </Typography>
                                 </CardContent>
                                 <CardActions>
@@ -249,11 +269,12 @@ export default function Home() {
                                             ml: 1,
                                         }}
                                     >
-                                        Read More
+                                        {t('cards.card2.button')}
                                     </Button>
                                 </CardActions>
                             </Card>
                         </Grid>
+
                         {/* Card 3 */}
                         <Grid item xs={12} sm={6} md={4}>
                             <Card
@@ -273,15 +294,15 @@ export default function Home() {
                                 <CardMedia
                                     component="img"
                                     height="200"
-                                    image="https://media.istockphoto.com/id/1382944449/photo/hands-holding-a-heart.jpg?s=1024x1024&w=is&k=20&c=feMfwoDF9jANGjc019fRxrZo0pCwo0ukcuAQJvb_w6w="
-                                    alt="Give Space"
+                                    image="https://media.istockphoto.com/id/534831801/photo/phlebotomist-preparing-patient-to-donate-blood-in-hospital-lab.jpg?s=1024x1024&w=is&k=20&c=L7gowzIqovSPAYGbLp5luoh1Jyd5G9Bi-e-OZRKNj0g="
+                                    alt={t('cards.card3.title')}
                                 />
                                 <CardContent>
                                     <Typography variant="h6" color="error" fontWeight="bold">
-                                        Give Space
+                                        {t('cards.card3.title')}
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary">
-                                        Use your space to spread awareness and encourage
+                                        {t('cards.card3.description')}
                                     </Typography>
                                 </CardContent>
                                 <CardActions>
@@ -296,7 +317,7 @@ export default function Home() {
                                             ml: 1,
                                         }}
                                     >
-                                        Read More
+                                        {t('cards.card3.button')}
                                     </Button>
                                 </CardActions>
                             </Card>
@@ -306,49 +327,54 @@ export default function Home() {
             </Box>
 
             {/* About Us Section */}
-            <Fade in={isVisible} timeout={1000}>
-                <Box
-                    ref={sectionRef}
-                    id="about"
-                    sx={{
-                        background: "#fff",
-                        borderRadius: 4,
-                        boxShadow: 3,
-                        my: 6,
-                        py: 6,
-                    }}
-                >
-                    <Container>
-                        <Grid container alignItems="center" spacing={4}>
-                            <Grid item xs={12} md={6}>
-                                <Typography variant="h4" color="error" gutterBottom>
-                                    About Us
+            <Container
+                sx={{
+                    py: 10,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minHeight: "40vh",
+                }}
+                ref={sectionRef}
+            >
+                <Grid container spacing={4} alignItems="center">
+                    <Grid item xs={12} md={6}>
+                        <Fade in={isVisible} timeout={800}>
+                            <Box>
+                                <Typography
+                                    variant="h4"
+                                    fontWeight="bold"
+                                    mb={4}
+                                    sx={{ color: "error.main" }}
+                                >
+                                    {t('about.title')}
                                 </Typography>
                                 <Typography variant="body1" paragraph>
-                                    At <strong>LifePulse</strong>, our mission is to connect generous donors with those in urgent need of blood.
-                                    We believe that one drop can make a world of difference, and our platform helps facilitate safe, quick, and impactful donations.
+                                    {t('about.paragraph1')}
                                 </Typography>
                                 <Typography variant="body1" paragraph>
-                                    Founded in 2025, we aim to bridge the gap between blood donors and hospitals, ensuring no life is lost due to shortage.
-                                    Join us in this life-saving journey and become a hero today.
+                                    {t('about.paragraph2')}
                                 </Typography>
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <Box
-                                    component="img"
-                                    src="https://media.istockphoto.com/id/1304993981/photo/donate-on-a-red-background.jpg?s=1024x1024&w=is&k=20&c=ihtZTKrOtlne5gd7abL413xKMfwoCw0XkZb0EHmSXUI="
-                                    alt="Our Team"
-                                    sx={{
-                                        width: "100%",
-                                        borderRadius: 3,
-                                        boxShadow: 3,
-                                    }}
-                                />
-                            </Grid>
-                        </Grid>
-                    </Container>
-                </Box>
-            </Fade>
+                            </Box>
+                        </Fade>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <Fade in={isVisible} timeout={800} style={{ transitionDelay: "300ms" }}>
+                            <Box
+                                component="img"
+                                src="https://media.istockphoto.com/id/1304993981/photo/donate-on-a-red-background.jpg?s=1024x1024&w=is&k=20&c=ihtZTKrOtlne5gd7abL413xKMfwoCw0XkZb0EHmSXUI="
+                                alt={t('about.title')}
+                                sx={{
+                                    width: "100%",
+                                    borderRadius: 3,
+                                    boxShadow: 3,
+                                }}
+                            />
+                        </Fade>
+                    </Grid>
+                </Grid>
+            </Container>
+
             <Footer />
         </>
     );
