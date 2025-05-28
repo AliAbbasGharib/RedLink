@@ -39,20 +39,17 @@ import { useTranslation } from "react-i18next";
 export default function NavBar({ onAboutClick }) {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
     const [name, setName] = useState("");
     const [role, setRole] = useState("");
     const [anchorEl, setAnchorEl] = useState(null);
     const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
     const [langMenuAnchor, setLangMenuAnchor] = useState(null);
-
-    // Notification state and anchor for dropdown
     const [notifAnchorEl, setNotifAnchorEl] = useState(null);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
-
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
     const cookie = Cookie();
     const token = cookie.get("token");
@@ -66,19 +63,14 @@ export default function NavBar({ onAboutClick }) {
                 })
                 .catch(() => { });
 
-            // Fetch notifications
             fetchNotifications();
         }
     }, [token]);
 
     const fetchNotifications = async () => {
         try {
-            // Replace this URL with your actual notifications API endpoint
             const response = await Axios.get(NOTIFICATIONS);
-
             setNotifications(response.data.notifications || []);
-
-            // Count unread notifications
             const unread = response.data.notifications?.filter(n => !n.read).length || 0;
             setUnreadCount(unread);
         } catch (error) {
@@ -88,10 +80,9 @@ export default function NavBar({ onAboutClick }) {
 
     const handleNotifMenuOpen = (event) => {
         setNotifAnchorEl(event.currentTarget);
-        setUnreadCount(0); 
+        setUnreadCount(0);
     };
     const handleNotifMenuClose = () => setNotifAnchorEl(null);
-
     const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
     const handleMenuClose = () => setAnchorEl(null);
     const handleMobileMenuOpen = (event) => setMobileMenuAnchor(event.currentTarget);
@@ -185,114 +176,71 @@ export default function NavBar({ onAboutClick }) {
                     )}
 
                     <Box sx={{ ml: 2, display: "flex", alignItems: "center", gap: 2 }}>
-                        {/* Notification Icon */}
                         {token && (
                             <>
                                 <Tooltip title={t("notifications")}>
-                                    <IconButton
-                                        color="inherit"
-                                        onClick={handleNotifMenuOpen}
-                                        aria-controls={Boolean(notifAnchorEl) ? 'notif-menu' : undefined}
-                                        aria-haspopup="true"
-                                        aria-expanded={Boolean(notifAnchorEl) ? 'true' : undefined}
-                                    >
+                                    <IconButton color="inherit" onClick={handleNotifMenuOpen}>
                                         <Badge badgeContent={unreadCount} color="error">
                                             <NotificationsIcon />
                                         </Badge>
                                     </IconButton>
                                 </Tooltip>
                                 <Menu
-                                    id="notif-menu"
                                     anchorEl={notifAnchorEl}
                                     open={Boolean(notifAnchorEl)}
                                     onClose={handleNotifMenuClose}
-                                    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                                    transformOrigin={{ vertical: "top", horizontal: "right" }}
                                     PaperProps={{ sx: { maxHeight: 300, width: '300px' } }}
                                 >
-                                    {notifications.length === 0 && (
+                                    {notifications.length === 0 ? (
                                         <MenuItem disabled>{t("noNotifications")}</MenuItem>
+                                    ) : (
+                                        notifications.map((notif, index) => (
+                                            <MenuItem key={index} onClick={handleNotifMenuClose} sx={{ whiteSpace: "normal", py: 1 }}>
+                                                {notif.body || JSON.stringify(notif)}
+                                            </MenuItem>
+                                        ))
                                     )}
-                                    {notifications.map((notif, index) => (
-                                        <MenuItem
-                                            key={index}
-                                            onClick={() => {
-                                                // Handle notification click (e.g., navigate or mark read)
-                                                console.log("Notification clicked:", notif);
-                                                handleNotifMenuClose();
-                                            }}
-                                            sx={{ whiteSpace: "normal", py: 1 }}
-                                        >
-                                            {notif.body || JSON.stringify(notif)}
-                                        </MenuItem>
-                                    ))}
                                 </Menu>
                             </>
                         )}
 
-                        {/* Language Selector */}
-                        <Tooltip title={t("language")}>
-                            <IconButton onClick={handleLangMenuOpen} color="inherit">
-                                <LanguageIcon />
-                            </IconButton>
-                        </Tooltip>
-                        <Menu
-                            anchorEl={langMenuAnchor}
-                            open={Boolean(langMenuAnchor)}
-                            onClose={handleLangMenuClose}
-                            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                            transformOrigin={{ vertical: "top", horizontal: "right" }}
-                        >
-                            <MenuItem onClick={() => changeLanguage("en")}>🇺🇸 English</MenuItem>
-                            <MenuItem onClick={() => changeLanguage("ar")}>🇸🇦 العربية</MenuItem>
-                        </Menu>
-                    </Box>
+                        {!isMobile && (
+                            <>
+                                {!token && (
+                                    <Box sx={{ display: "flex", gap: 1 }}>
+                                        <Button
+                                            variant="outlined"
+                                            color="error"
+                                            onClick={handleRegister}
+                                            startIcon={<PersonAddAltIcon />}
+                                            sx={{ borderRadius: 3, fontWeight: 600, px: 3 }}
+                                        >
+                                            {t("signIn")}
+                                        </Button>
+                                        <Button
+                                            variant="contained"
+                                            color="error"
+                                            onClick={handleLogin}
+                                            startIcon={<LoginIcon />}
+                                            sx={{ borderRadius: 3, fontWeight: 600, px: 3 }}
+                                        >
+                                            {t("login")}
+                                        </Button>
+                                    </Box>
+                                )}
+                            </>
+                        )}
 
-                    <Box sx={{ flexGrow: 0, ml: "auto" }}>
-                        {!token ? (
-                            <Box sx={{ display: "flex", gap: 1 }}>
-                                <Button
-                                    variant="outlined"
-                                    color="error"
-                                    onClick={handleRegister}
-                                    startIcon={<PersonAddAltIcon />}
-                                    sx={{ borderRadius: 3, fontWeight: 600, px: 3 }}
-                                >
-                                    {t("signIn")}
-                                </Button>
-                                <Button
-                                    variant="contained"
-                                    color="error"
-                                    onClick={handleLogin}
-                                    startIcon={<LoginIcon />}
-                                    sx={{ borderRadius: 3, fontWeight: 600, px: 3 }}
-                                >
-                                    {t("login")}
-                                </Button>
-                            </Box>
-                        ) : (
+                        {token && (
                             <>
                                 <Tooltip title={name || t("account")}>
                                     <IconButton onClick={handleMenuOpen} sx={{ p: 0, ml: 1 }}>
-                                        {name ? (
-                                            <Avatar sx={{ bgcolor: "rgb(192, 23, 23)" }}>
-                                                {name[0].toUpperCase()}
-                                            </Avatar>
-                                        ) : (
-                                            <Avatar sx={{ bgcolor: "rgb(192, 23, 23)" }}>
-                                                <AccountCircleIcon />
-                                            </Avatar>
-                                        )}
+                                        <Avatar sx={{ bgcolor: "rgb(192, 23, 23)" }}>
+                                            {name ? name[0].toUpperCase() : <AccountCircleIcon />}
+                                        </Avatar>
                                     </IconButton>
                                 </Tooltip>
-
-                                <Menu
-                                    anchorEl={anchorEl}
-                                    open={Boolean(anchorEl)}
-                                    onClose={handleMenuClose}
-                                    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                                    transformOrigin={{ vertical: "top", horizontal: "right" }}
-                                >
+                                <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
                                     <MenuItem disabled>
                                         <ListItemIcon>
                                             <AccountCircleIcon fontSize="small" />
@@ -324,23 +272,32 @@ export default function NavBar({ onAboutClick }) {
 
                     {isMobile && (
                         <>
-                            <IconButton
-                                size="large"
-                                edge="end"
-                                color="inherit"
-                                aria-label="menu"
-                                onClick={handleMobileMenuOpen}
-                                sx={{ ml: 2 }}
+                        <div style={{
+                            position:"absolute",
+                            left:"80%",
+                            display:"flex",
+                            alignItems:'center',
+
+                        }}>
+                            <Tooltip title={t("language")} >
+                                <IconButton onClick={handleLangMenuOpen} color="inherit">
+                                    <LanguageIcon />
+                                </IconButton>
+                            </Tooltip>
+                            <Menu
+                                anchorEl={langMenuAnchor}
+                                open={Boolean(langMenuAnchor)}
+                                onClose={handleLangMenuClose}
                             >
+                                <MenuItem onClick={() => changeLanguage("en")}>🇺🇸 English</MenuItem>
+                                <MenuItem onClick={() => changeLanguage("ar")}>🇸🇦 العربية</MenuItem>
+                            </Menu>
+
+                            <IconButton size="large" color="inherit" onClick={handleMobileMenuOpen} >
                                 <MenuIcon />
                             </IconButton>
-                            <Menu
-                                anchorEl={mobileMenuAnchor}
-                                open={Boolean(mobileMenuAnchor)}
-                                onClose={handleMobileMenuClose}
-                                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                                transformOrigin={{ vertical: "top", horizontal: "right" }}
-                            >
+                            </div>
+                            <Menu anchorEl={mobileMenuAnchor} open={Boolean(mobileMenuAnchor)} onClose={handleMobileMenuClose}>
                                 {navLinks.map((item) =>
                                     item.to ? (
                                         <MenuItem
@@ -348,7 +305,6 @@ export default function NavBar({ onAboutClick }) {
                                             component={Link}
                                             to={item.to}
                                             onClick={handleMobileMenuClose}
-                                            sx={{ fontWeight: 600 }}
                                         >
                                             <ListItemIcon>{item.icon}</ListItemIcon>
                                             <ListItemText>{item.label}</ListItemText>
@@ -360,28 +316,36 @@ export default function NavBar({ onAboutClick }) {
                                                 item.onClick();
                                                 handleMobileMenuClose();
                                             }}
-                                            sx={{ fontWeight: 600 }}
                                         >
                                             <ListItemIcon>{item.icon}</ListItemIcon>
                                             <ListItemText>{item.label}</ListItemText>
                                         </MenuItem>
                                     )
                                 )}
+
                                 {!token ? (
-                                    <>
-                                        <MenuItem onClick={() => { handleRegister(); handleMobileMenuClose(); }}>
-                                            <ListItemIcon>
-                                                <PersonAddAltIcon fontSize="small" />
-                                            </ListItemIcon>
-                                            <ListItemText>{t("signIn")}</ListItemText>
-                                        </MenuItem>
-                                        <MenuItem onClick={() => { handleLogin(); handleMobileMenuClose(); }}>
-                                            <ListItemIcon>
-                                                <LoginIcon fontSize="small" />
-                                            </ListItemIcon>
-                                            <ListItemText>{t("login")}</ListItemText>
-                                        </MenuItem>
-                                    </>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', p: 2 }}>
+                                        <Button
+                                            fullWidth
+                                            variant="outlined"
+                                            color="error"
+                                            startIcon={<PersonAddAltIcon />}
+                                            onClick={() => { handleRegister(); handleMobileMenuClose(); }}
+                                            sx={{ mb: 1, borderRadius: 3, fontWeight: 600 }}
+                                        >
+                                            {t("signIn")}
+                                        </Button>
+                                        <Button
+                                            fullWidth
+                                            variant="contained"
+                                            color="error"
+                                            startIcon={<LoginIcon />}
+                                            onClick={() => { handleLogin(); handleMobileMenuClose(); }}
+                                            sx={{ borderRadius: 3, fontWeight: 600 }}
+                                        >
+                                            {t("login")}
+                                        </Button>
+                                    </Box>
                                 ) : (
                                     <>
                                         <MenuItem disabled>

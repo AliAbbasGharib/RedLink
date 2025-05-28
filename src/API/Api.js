@@ -17,3 +17,4 @@ export const UPDATEREQUESTBLOOD = `${baseURL}/request/update`;
 
 export const BLOODTYPES = `${baseURL}/count-by-blood-type`;
 export const NOTIFICATIONS = `${baseURL}/notifications`;
+export const ADDNOTIFICATION = `${baseURL}/notifications/send-to-all`;

@@ -155,7 +155,22 @@ export default function Register() {
     return (
         <>
             <NavBar />
-            {loading && <LoadingSubmit />}
+            {loading && <Box
+                sx={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    width: "100vw",
+                    height: "100vh",
+                    backgroundColor: "rgba(255, 255, 255, 0.7)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    zIndex: 999,
+                }}
+            >
+                <LoadingSubmit />
+            </Box>}
             <Container
                 maxWidth="sm"
                 sx={{

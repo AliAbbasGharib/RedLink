@@ -13,7 +13,8 @@ import {
     Paper,
     Alert,
     InputAdornment,
-    IconButton
+    IconButton,
+    Card
 } from "@mui/material";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
@@ -80,7 +81,24 @@ export default function Login() {
     return (
         <>
             <NavBar />
-            {loading && <LoadingSubmit />}
+            {loading && <Box
+                sx={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    width: "100vw",
+                    height: "100vh",
+                    backgroundColor: "rgba(255, 255, 255, 0.7)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    zIndex: 999,
+                }}
+            >
+                <LoadingSubmit />
+            </Box>}
+
+
             <Container maxWidth="sm" sx={{ minHeight: "100vh", display: "flex", alignItems: "center" }}>
                 <Paper elevation={4} sx={{ p: 4, borderRadius: 4, width: "100%" }}>
                     <Typography variant="h4" align="center" fontWeight="bold" gutterBottom>

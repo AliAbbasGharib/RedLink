@@ -7,7 +7,8 @@ import {
   faHandHoldingDroplet,  // Add Request (blood drop + hand)
   faEnvelope,            // Message
   faGear,                // Settings
-  faRightFromBracket     // Logout
+  faRightFromBracket,     // Logout
+  faBell
 } from '@fortawesome/free-solid-svg-icons';
 
 
@@ -39,25 +40,31 @@ export const links = [
   {
     name: "Request Blood",
     path: "/dashboard/request",
-    icon: faTint, // 🩸 Classic blood icon
+    icon: faTint, 
     role: ["1995", "1996"]
   },
   {
     name: "Add Request",
     path: "/dashboard/request/add",
-    icon: faHandHoldingDroplet, // 🤲🩸 Hand with droplet = blood donation
+    icon: faHandHoldingDroplet,
     role: ["1995", "1996"]
   },
   {
-    name: "Message",
-    path: "/dashboard/writer",
-    icon: faEnvelope, // ✉️ Represents messages
+    name: "Notifications",
+    path: "/dashboard/notification",
+    icon: faBell, 
+    role: ["1995", "1996"]
+  },
+    {
+    name: "Messages",
+    path: "/dashboard/message",
+    icon: faEnvelope, 
     role: ["1995", "1996"]
   },
   {
     name: "Settings",
-    path: "/dashboard/products",
-    icon: faGear, // ⚙️ Classic settings icon
+    path: "/dashboard/settings",
+    icon: faGear, 
     role: ["1995", "1996"]
   },
   {

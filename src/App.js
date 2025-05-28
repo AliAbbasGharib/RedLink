@@ -22,6 +22,8 @@ import UpdateRequestBlood from './Pages/DashBoard/RequestBlood/UpdateRequestBloo
 import UserRequestBloodDetails from './Pages/Website/RequestBlood/UserRequestBloodDetail';
 import AvailableDonor from './Pages/DashBoard/User/AvailableDonor';
 import StaticPage from './Pages/DashBoard/StaticPage';
+import AddNotification from './Pages/DashBoard/Notification/AddNotification';
+import SettingsPage from './Pages/DashBoard/Settings/Setting';
 
 function App() {
   const { i18n } = useTranslation();
@@ -59,8 +61,13 @@ function App() {
               <Route path="user/add" element={<AddUsers />} />
               <Route path="users/:id" element={<UpdateUser />} />
               <Route path="users/details/:id" element={<UserDetails />} />
+              <Route path="available-donor" element={<AvailableDonor />} />
+              <Route path="notification" element={<AddNotification />} />
+              <Route path="settings" element={<SettingsPage />} />
+
+
             </Route>
-            <Route path="available-donor" element={<AvailableDonor />} />
+
             <Route>
               <Route path="request" element={<GetRequestBlood />} />
               <Route path="request/add" element={<AddRequestBlood />} />
