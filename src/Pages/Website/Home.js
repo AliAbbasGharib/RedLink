@@ -97,7 +97,7 @@ export default function Home() {
                 }}
             >
                 <Container>
-                    <Grid container alignItems="center">
+                    <Grid container alignItems="center" >
                         <Grid item xs={12} md={8}>
                             <Box mb={3} mt={5}>
                                 <Badge

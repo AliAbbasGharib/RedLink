@@ -11,16 +11,16 @@ import {
 } from "@mui/material";
 import EmailIcon from "@mui/icons-material/Email";
 import PersonIcon from "@mui/icons-material/Person";
-import SubjectIcon from "@mui/icons-material/Subject";
 import MessageIcon from "@mui/icons-material/Message";
 import NavBar from "./NavBar";
 import Footer from "./Footer";
+import { Axios } from "../../API/Axios";
+import { SENDCONTACT } from "../../API/Api";
 
 export default function Contact() {
     const [form, setForm] = useState({
         name: "",
-        email: "",
-        subject: "",
+        phone_number: "",
         message: ""
     });
     const [success, setSuccess] = useState("");
@@ -48,21 +48,31 @@ export default function Contact() {
         setForm({ ...form, [e.target.name]: e.target.value });
     }
 
-    function handleSubmit(e) {
+   async function handleSubmit(e) {
         e.preventDefault();
         setLoading(true);
         setError("");
         setSuccess("");
-        // Simulate API call
-        setTimeout(() => {
-            if (form.name && form.email && form.subject && form.message) {
-                setSuccess("Your message has been sent!");
-                setForm({ name: "", email: "", subject: "", message: "" });
-            } else {
-                setError("Please fill in all fields.");
+        try {
+           await Axios.post(SENDCONTACT, form)
+                .then(resp => {
+                    console.log(resp)
+                    setForm(resp.data);
+                    setSuccess("Your message has been sent!");
+                    setLoading(false);
+                });
+        } catch (err) {
+            if(err.status === 429)
+            {
+                setError("Send Another message after 30 min");
             }
-            setLoading(false);
-        }, 1200);
+            
+        }
+
+
+
+
+
     }
 
     return (
@@ -104,10 +114,10 @@ export default function Contact() {
                             }}
                         />
                         <TextField
-                            label="Email"
-                            name="email"
-                            type="email"
-                            value={form.email}
+                            label="Phone Number "
+                            name="phone_number"
+                            type="number"
+                            value={form.phone_number}
                             onChange={handleChange}
                             required
                             fullWidth
@@ -117,23 +127,6 @@ export default function Contact() {
                                 startAdornment: (
                                     <InputAdornment position="start">
                                         <EmailIcon color="action" />
-                                    </InputAdornment>
-                                ),
-                            }}
-                        />
-                        <TextField
-                            label="Subject"
-                            name="subject"
-                            value={form.subject}
-                            onChange={handleChange}
-                            required
-                            fullWidth
-                            margin="normal"
-                            sx={redFocusSx}
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <SubjectIcon color="action" />
                                     </InputAdornment>
                                 ),
                             }}

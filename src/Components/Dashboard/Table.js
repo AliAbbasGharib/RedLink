@@ -17,14 +17,15 @@ import {
     DialogContentText,
     DialogActions,
     Tooltip,
-    
+    Pagination,
+    Stack,
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AutorenewIcon from '@mui/icons-material/Autorenew';
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
 
 export default function TableShow(props) {
     const [confirmUser, setConfirmUser] = useState(null);
@@ -34,8 +35,9 @@ export default function TableShow(props) {
     const [statusRow, setStatusRow] = useState(null);
 
     const nav = useNavigate();
-    const currentUser = props.currentUser || false;
+    const currentUser = props.currentUser || {};
     const allowedStatuses = ["active", "inactive", "pending", "banned"];
+    const rowsPerPage = 10;
 
     const handleMenuOpen = (event, row) => {
         setAnchorEl(event.currentTarget);
@@ -55,6 +57,15 @@ export default function TableShow(props) {
         setStatusRow(null);
     };
 
+    const handlePageChange = (event, value) => {
+        if (props.setPage) {
+            props.setPage(value);
+        }
+        if (props.fetchPage) {
+            props.fetchPage(value);
+        }
+    };
+
     return (
         <>
             <TableContainer component={Paper}>
@@ -69,56 +80,55 @@ export default function TableShow(props) {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {props.data.length === 0 ? (
+                        {props.loading ? (
                             <TableRow>
-                                <TableCell colSpan={props.header.length + 3} align="center">
+                                <TableCell colSpan={props.header.length + 2} align="center">
+                                    Loading...
+                                </TableCell>
+                            </TableRow>
+                        ) : props.data.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={props.header.length + 2} align="center">
                                     Users not found...
                                 </TableCell>
                             </TableRow>
                         ) : (
                             props.data.map((el, key1) => (
-                                <TableRow key={key1}>
-                                    <TableCell>{key1 + 1}</TableCell>
+                                <TableRow key={el._id}>
+                                    <TableCell>{(props.page - 1) * rowsPerPage + key1 + 1}</TableCell>
                                     {props.header.map((el2, key2) => (
                                         <TableCell key={key2}>
-                                            {el2.key === "image" ? (
-                                                <img
-                                                    src={el[el2.key]}
-                                                    style={{ width: "100px", height: "40px" }}
-                                                    alt="#"
-                                                />
-                                            ) : el2.key === "status" ? (
-                                                <Chip
-                                                    label={el[el2.key].charAt(0).toUpperCase() + el[el2.key].slice(1)}
-                                                    color={
-                                                        el[el2.key] === "active"
-                                                            ? "success"
-                                                            : el[el2.key] === "inactive"
-                                                                ? "error"
-                                                                : "default"
-                                                    }
-                                                    size="small"
-                                                />
-                                            ) : el[el2.key] === "1995" ? (
-                                                "Admin"
-                                            ) : el[el2.key] === "2001" ? (
-                                                "Donor"
-                                            ) : el[el2.key] === "1996" ? (
-                                                "Hospital"
-                                            ) : el[el2.key] === "1999" ? (
-                                                "Patient"
-                                            ) : (
-                                                el[el2.key]
-                                            )}
+                                            {
+                                                el2.key === "status" ? (
+                                                    <Chip
+                                                        label={
+                                                            el[el2.key].charAt(0).toUpperCase() +
+                                                            el[el2.key].slice(1)
+                                                        }
+                                                        color={
+                                                            el[el2.key] === "active"
+                                                                ? "success"
+                                                                : el[el2.key] === "inactive"
+                                                                    ? "error"
+                                                                    : "default"
+                                                        }
+                                                        size="small"
+                                                    />
+                                                ) : el[el2.key] === "1995" ? (
+                                                    "Admin"
+                                                ) : el[el2.key] === "2001" ? (
+                                                    "Donor"
+                                                ) : el[el2.key] === "1996" ? (
+                                                    "Hospital"
+                                                ) : (
+                                                    el[el2.key]
+                                                )}
                                             {currentUser && el[el2.key] === currentUser.name && " (You)"}
                                         </TableCell>
                                     ))}
                                     <TableCell>
                                         <Tooltip title="Actions">
-                                            <IconButton
-                                                size="small"
-                                                onClick={(e) => handleMenuOpen(e, el)}
-                                            >
+                                            <IconButton size="small" onClick={(e) => handleMenuOpen(e, el)}>
                                                 <VisibilityIcon />
                                             </IconButton>
                                         </Tooltip>
@@ -146,11 +156,7 @@ export default function TableShow(props) {
                                                 <AutorenewIcon sx={{ mr: 1 }} />
                                                 Change Status
                                             </MenuItem>
-                                            <MenuItem
-                                                // component={nav}
-                                                // to={`${el._id}`}
-                                                onClick={()=> nav(`/dashboard/users/${el._id}`)}
-                                            >
+                                            <MenuItem onClick={() => nav(`/dashboard/users/${el._id}`)}>
                                                 <EditIcon sx={{ mr: 1 }} />
                                                 Edit
                                             </MenuItem>
@@ -194,11 +200,20 @@ export default function TableShow(props) {
                 </Table>
             </TableContainer>
 
-            {/* Confirmation Dialog */}
-            <Dialog
-                open={!!confirmUser}
-                onClose={() => setConfirmUser(null)}
-            >
+            {/* Pagination */}
+            <Stack spacing={2} sx={{ mt: 2 }} alignItems="center">
+                <Pagination
+                    count={props.totalPages || 1}
+                    page={props.page || 1}
+                    onChange={handlePageChange}
+                    color="primary"
+                    showFirstButton
+                    showLastButton
+                />
+            </Stack>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={!!confirmUser} onClose={() => setConfirmUser(null)}>
                 <DialogTitle>Delete User</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
@@ -216,10 +231,7 @@ export default function TableShow(props) {
                     >
                         Yes
                     </Button>
-                    <Button
-                        onClick={() => setConfirmUser(null)}
-                        variant="outlined"
-                    >
+                    <Button onClick={() => setConfirmUser(null)} variant="outlined">
                         No
                     </Button>
                 </DialogActions>

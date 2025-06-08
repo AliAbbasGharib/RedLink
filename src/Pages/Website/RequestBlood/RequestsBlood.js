@@ -24,7 +24,7 @@ import DoneIcon from "@mui/icons-material/Done";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import NavBar from "../NavBar";
 import { Axios } from "../../../API/Axios";
-import { REQUESTBLOOD, REQUESTBLOODLIMT, USER } from "../../../API/Api";
+import { REQUESTBLOOD, USER } from "../../../API/Api";
 import { Link, useNavigate } from "react-router-dom";
 import Cookie from "cookie-universal";
 
@@ -38,10 +38,11 @@ export default function RequestBloodCardList() {
     const [requests, setRequests] = useState([]);
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedReq, setSelectedReq] = useState(null);
-    const [user, setUser] = useState("");
+    const [user, setUser] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const [openAlert, setOpenAlert] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const requestsPerPage = 12;
 
     const navigate = useNavigate();
@@ -50,7 +51,7 @@ export default function RequestBloodCardList() {
         if (token) {
             Axios.get(USER)
                 .then((response) => {
-                    const userData = response.data._id;
+                    const userData = response.data; // Adjust if your user data shape is different
                     setUser(userData);
                 })
                 .catch((e) => {
@@ -59,12 +60,15 @@ export default function RequestBloodCardList() {
         }
     }, []);
 
-    useEffect(() => {
+    const fetchRequests = (page) => {
         setLoading(true);
-        Axios.get(`${REQUESTBLOODLIMT}/50`)
+        // Pass page and limit as query params
+        Axios.get(`${REQUESTBLOOD}?page=${page}&limit=${requestsPerPage}`)
             .then((response) => {
-                setRequests(response.data.requests);
-                
+                // Assuming response.data looks like:
+                // { requests: [...], totalPages: x, totalRequests: y }
+                setRequests(response.data.requests || []);
+                setTotalPages(response.data.totalPages || 1);
             })
             .catch((error) => {
                 console.error("Error fetching blood requests:", error);
@@ -72,17 +76,20 @@ export default function RequestBloodCardList() {
             .finally(() => {
                 setLoading(false);
             });
-    }, []);
+    };
 
+    // Fetch requests every time currentPage changes
+    useEffect(() => {
+        fetchRequests(currentPage);
+    }, [currentPage]);
+
+    // Apply filtering client-side after fetching current page
+    // (If you want server-side filtering, that requires API support)
     const filteredRequests = requests.filter((request) =>
         (request.donation_point?.toLowerCase() || "").includes(searchAddress.toLowerCase()) &&
         (searchBloodType === "" ||
             (request.blood_type?.toLowerCase() || "") === searchBloodType.toLowerCase())
     );
-
-    const indexOfLastRequest = currentPage * requestsPerPage;
-    const indexOfFirstRequest = indexOfLastRequest - requestsPerPage;
-    const currentRequests = filteredRequests.slice(indexOfFirstRequest, indexOfLastRequest);
 
     const getStatusChip = (status) =>
         status === "complete"
@@ -135,7 +142,7 @@ export default function RequestBloodCardList() {
     const canManageRequest = (request) => {
         if (!user) return false;
         const requestUserId = typeof request.user_id === "object" ? request.user_id._id : request.user_id;
-        return user.role === "1995" || requestUserId === user;
+        return user.role === "1995" || requestUserId === user._id || requestUserId === user;
     };
 
     return (
@@ -198,9 +205,14 @@ export default function RequestBloodCardList() {
                             <CircularProgress color="error" />
                         </Box>
                     ) : (
-                        <>
+                        <Box>
                             <Grid container spacing={4}>
-                                {currentRequests.map((request) => (
+                                {filteredRequests.length === 0 && (
+                                    <Typography variant="body1" align="center" width="100%">
+                                        No requests found.
+                                    </Typography>
+                                )}
+                                {filteredRequests.map((request) => (
                                     <Grid item xs={12} sm={5} md={4} key={request._id} sx={{ display: "flex" }}>
                                         <Card
                                             elevation={3}
@@ -252,7 +264,7 @@ export default function RequestBloodCardList() {
                                                     </a>
                                                 </Typography>
 
-                                                <Typography variant="body2" mb={1}>
+                                                <Typography variant="body2" component="div" mb={1}>
                                                     <strong>Status:</strong> {getStatusChip(request.done_status)}
                                                 </Typography>
                                             </CardContent>
@@ -273,10 +285,10 @@ export default function RequestBloodCardList() {
                             </Grid>
 
                             {/* Pagination */}
-                            {filteredRequests.length > requestsPerPage && (
+                            {totalPages > 1 && (
                                 <Box mt={4} display="flex" justifyContent="center">
                                     <Pagination
-                                        count={Math.ceil(filteredRequests.length / requestsPerPage)}
+                                        count={totalPages}
                                         page={currentPage}
                                         onChange={(e, value) => setCurrentPage(value)}
                                         color="primary"
@@ -284,7 +296,7 @@ export default function RequestBloodCardList() {
                                     />
                                 </Box>
                             )}
-                        </>
+                        </Box>
                     )}
                 </Box>
             </Container>
@@ -298,7 +310,7 @@ export default function RequestBloodCardList() {
                 transformOrigin={{ vertical: "top", horizontal: "right" }}
             >
                 {selectedReq && (
-                    <>
+                    <Box>
                         <MenuItem>
                             <VisibilityIcon fontSize="small" sx={{ mr: 1 }} />
                             View Details
@@ -311,7 +323,7 @@ export default function RequestBloodCardList() {
                             <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
                             Delete
                         </MenuItem>
-                    </>
+                    </Box>
                 )}
             </Menu>
         </>

@@ -24,7 +24,9 @@ import AvailableDonor from './Pages/DashBoard/User/AvailableDonor';
 import StaticPage from './Pages/DashBoard/StaticPage';
 import AddNotification from './Pages/DashBoard/Notification/AddNotification';
 import SettingsPage from './Pages/DashBoard/Settings/Setting';
-
+import UpdateNotification from "./Pages/DashBoard/Notification/UpdateNotification";
+import BloodDonationEligibilityForm from './Pages/Website/DonationBlood/DonationBlood';
+import Messages from './Pages/DashBoard/Messages/Messages';
 function App() {
   const { i18n } = useTranslation();
 
@@ -46,7 +48,7 @@ function App() {
         <Route path="/request-blood" element={<BloodRequests />} />
         <Route path="/request-blood/add-request" element={<UserAddRequestBlood />} />
         <Route path="/request-blood/:id" element={<UserRequestBloodDetails />} />
-
+        <Route path="/give-blood" element={<BloodDonationEligibilityForm />} />
         <Route element={<RequireBack />}>
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
@@ -63,9 +65,9 @@ function App() {
               <Route path="users/details/:id" element={<UserDetails />} />
               <Route path="available-donor" element={<AvailableDonor />} />
               <Route path="notification" element={<AddNotification />} />
+              <Route path="notification/:id" element={<UpdateNotification />} />
+              <Route path="message" element={<Messages />} />
               <Route path="settings" element={<SettingsPage />} />
-
-
             </Route>
 
             <Route>
