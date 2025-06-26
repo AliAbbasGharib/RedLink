@@ -56,26 +56,29 @@ export default function NavBar({ onAboutClick }) {
 
     const handleLogOut = useCallback(async () => {
         try {
-            await Axios.post(LOGOUT, {}, { headers: { Authorization: `Bearer ${token}` } });
+            await Axios.post(LOGOUT);
             cookie.remove("token");
             navigate("/login");
         } catch (err) {
             console.error(err);
         }
-    }, [cookie, navigate, token]);
+    }, [cookie, navigate]);
 
+    console.log("NavBar rendered with token:", token);
     // Fetch user and notifications
     useEffect(() => {
         if (!token) return;
 
-        Axios.get(USER, { headers: { Authorization: `Bearer ${token}` } })
-            .then(res => setUser({ name: res.data.name, role: res.data.role }))
+        Axios.get(USER)
+            .then(res =>
+                console.log("User data fetched:", res) ||
+                setUser({ name: res.data.name, role: res.data.role }))
             .catch(() => { });
 
         const fetchAll = async () => {
             try {
                 const [notifRes, countRes] = await Promise.all([
-                    Axios.get(NOTIFICATIONS, { headers: { Authorization: `Bearer ${token}` } }),
+                    Axios.get(NOTIFICATIONS),
                     Axios.get(UNREADCOUNT)
                 ]);
                 setNotifications(notifRes.data.notifications || []);
@@ -93,9 +96,9 @@ export default function NavBar({ onAboutClick }) {
     const handleNotifMenuOpen = async (e) => {
         setMenus(prev => ({ ...prev, notifAnchorEl: e.currentTarget }));
         try {
-            await Axios.post(MARKASREAD, {}, { headers: { Authorization: `Bearer ${token}` } });
+            await Axios.post(MARKASREAD, {});
             setUnreadCount(0);
-            const res = await Axios.get(NOTIFICATIONS, { headers: { Authorization: `Bearer ${token}` } });
+            const res = await Axios.get(NOTIFICATIONS);
             setNotifications(res.data.notifications || []);
         } catch (err) {
             console.error("Failed to mark all notifications as read", err);

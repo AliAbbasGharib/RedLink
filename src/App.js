@@ -27,6 +27,7 @@ import SettingsPage from './Pages/DashBoard/Settings/Setting';
 import UpdateNotification from "./Pages/DashBoard/Notification/UpdateNotification";
 import BloodDonationEligibilityForm from './Pages/Website/DonationBlood/DonationBlood';
 import Messages from './Pages/DashBoard/Messages/Messages';
+import VerifySuccess from './Components/VerifySuccess ';
 function App() {
   const { i18n } = useTranslation();
 
@@ -44,6 +45,7 @@ function App() {
     <div className="App">
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/verify-success" element={<VerifySuccess />} />
         <Route path="contact" element={<Contact />} />
         <Route path="/request-blood" element={<BloodRequests />} />
         <Route path="/request-blood/add-request" element={<UserAddRequestBlood />} />
@@ -53,6 +55,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
         </Route>
+
         <Route path="/*" element={<Err404 />} />
         <Route element={<RequireAuth allowedRole={['1995', '1996']} />}>
           <Route path="/dashboard" element={<DashBoard />}>
