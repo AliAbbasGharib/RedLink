@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState,useCallback  } from 'react';
 import { REGISTER } from '../../API/Api';
 import NavBar from "../Website/NavBar";
 import Cookies from 'cookie-universal';
@@ -32,7 +32,7 @@ export default function Register() {
         password: "",
         date_of_birth: "",
         gender: "",
-        blood_type: "",
+        blood_type: "", 
         address: "",
         last_donation_date: "",
         latitude: null,
@@ -49,49 +49,59 @@ export default function Register() {
     const cookie = Cookies();
     const nav = useNavigate();
 
-    useEffect(() => {
+    // 1. helper function
+const reverseGeocode = async (lat, lon) => {
+    try {
+        const res = await axios.get("https://nominatim.openstreetmap.org/reverse", {
+            params: { format: "json", lat, lon, zoom: 18, addressdetails: 1 },
+        });
+        const { city, town, village, country } = res.data.address;
+        const locationName = city || town || village || "";
+        return `${locationName}, ${country}`;
+    } catch (error) {
+        console.warn("Reverse geocode error:", error);
+        return "";
+    }
+};
+
+// 2. main function (wrap with useCallback ✅)
+const detectLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser");
+        return;
+    }
+
+    setDetectingLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            const { latitude, longitude } = position.coords;
+
+            const address = await reverseGeocode(latitude, longitude);
+
+            setUsers(prev => ({
+                ...prev,
+                latitude,
+                longitude,
+                address: address || prev.address,
+            }));
+
+            setDetectingLocation(false);
+        },
+        () => {
+            alert("Unable to retrieve your location. Please enter your address manually.");
+            setDetectingLocation(false);
+        }
+    );
+}, []); // ✅ important
+
+// 3. useEffect (AFTER functions)
+useEffect(() => {
+    if (focus.current) {
         focus.current.focus();
-        detectLocation();
-    }, []);
-
-    const reverseGeocode = async (lat, lon) => {
-        try {
-            const res = await axios.get("https://nominatim.openstreetmap.org/reverse", {
-                params: { format: "json", lat, lon, zoom: 18, addressdetails: 1 },
-            });
-            const { city, town, village, country } = res.data.address;
-            const locationName = city || town || village || "";
-            return `${locationName}, ${country}`;
-        } catch (error) {
-            console.warn("Reverse geocode error:", error);
-            return "";
-        }
-    };
-
-    const detectLocation = () => {
-        if (!navigator.geolocation) {
-            alert("Geolocation is not supported by your browser");
-            return;
-        }
-        setDetectingLocation(true);
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const { latitude, longitude } = position.coords;
-                const address = await reverseGeocode(latitude, longitude);
-                setUsers(prev => ({
-                    ...prev,
-                    latitude,
-                    longitude,
-                    address: address || prev.address,
-                }));
-                setDetectingLocation(false);
-            },
-            () => {
-                alert("Unable to retrieve your location. Please enter your address manually.");
-                setDetectingLocation(false);
-            }
-        );
-    };
+    }
+    detectLocation();
+}, [detectLocation]);
 
     function handleChange(e) {
         setUsers({
