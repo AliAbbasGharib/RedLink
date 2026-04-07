@@ -54,7 +54,7 @@ export default function Login() {
                     cookies.set("token", token);
 
                     setLoading(false);
-                    if (role === "1995") {
+                    if (role === "1995" || role === "1996") {
                         window.location.pathname = `/dashboard`;
                     } else {
                         window.location.pathname = `/`;

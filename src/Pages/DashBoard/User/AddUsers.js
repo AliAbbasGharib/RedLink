@@ -55,7 +55,7 @@ export default function AddUser() {
     }
     useEffect(() => {
         loadScript(
-            `https://maps.googleapis.com/maps/api/js?key=AIzaSyAxjQtpZsmQISacL74_I90QUGElgEre69M&libraries=places`,
+            `https://maps.googleapis.com/maps/api/js?key=AIzaSyA_THl5lNib8e535vnxl6YocbYT37i_CnE&libraries=places`,
             () => {
                 if (window.google && window.google.maps) {
                     autocompleteRef.current = new window.google.maps.places.Autocomplete(
@@ -246,7 +246,6 @@ export default function AddUser() {
                         onChange={handleChange}
                         inputRef={donationPointRef}
                         fullWidth
-                        required
                         sx={{ mb: 1 }}
                         helperText="Choose a location from the suggestions."
                     />
@@ -263,8 +262,8 @@ export default function AddUser() {
                                     allowFullScreen
                                     src={
                                         user.donation_point_lat && user.donation_point_lng
-                                            ? `https://www.google.com/maps/embed/v1/view?key=AIzaSyAxjQtpZsmQISacL74_I90QUGElgEre69M&center=${user.donation_point_lat},${user.donation_point_lng}&zoom=16`
-                                            : `https://www.google.com/maps/embed/v1/place?key=AIzaSyAxjQtpZsmQISacL74_I90QUGElgEre69M&q=${encodeURIComponent(user.address)}`
+                                            ? `https://www.google.com/maps/embed/v1/view?key=AIzaSyAVGH1CDRM5yW4kMAAqrhg96fIIzTZIgGU&center=${user.donation_point_lat},${user.donation_point_lng}&zoom=16`
+                                            : `https://www.google.com/maps/embed/v1/place?key=AIzaSyAVGH1CDRM5yW4kMAAqrhg96fIIzTZIgGU&q=${encodeURIComponent(user.address)}`
                                     }
                                 />
                             </Box>
@@ -324,7 +323,6 @@ export default function AddUser() {
                             !user.password ||
                             !user.gender ||
                             !user.blood_type ||
-                            !user.address ||
                             !user.role
                         }
                     >

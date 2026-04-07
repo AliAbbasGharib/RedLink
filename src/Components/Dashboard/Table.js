@@ -127,7 +127,7 @@ export default function TableShow(props) {
                                         </TableCell>
                                     ))}
                                     <TableCell>
-                                        <Tooltip title="Actions">
+                                        <Tooltip title="Actions" >
                                             <IconButton size="small" onClick={(e) => handleMenuOpen(e, el)}>
                                                 <VisibilityIcon />
                                             </IconButton>
@@ -147,20 +147,26 @@ export default function TableShow(props) {
                                                 <VisibilityIcon sx={{ mr: 1 }} />
                                                 Show
                                             </MenuItem>
-                                            <MenuItem
-                                                onClick={(e) => {
-                                                    handleStatusMenuOpen(e, el);
-                                                    handleMenuClose();
-                                                }}
-                                            >
-                                                <AutorenewIcon sx={{ mr: 1 }} />
-                                                Change Status
-                                            </MenuItem>
-                                            <MenuItem onClick={() => nav(`/dashboard/users/${el._id}`)}>
-                                                <EditIcon sx={{ mr: 1 }} />
-                                                Edit
-                                            </MenuItem>
-                                            {el._id !== currentUser._id && (
+                                            {String(currentUser.role) === "1995" && (
+
+                                                <MenuItem
+
+                                                    onClick={(e) => {
+                                                        handleStatusMenuOpen(e, el);
+                                                        handleMenuClose();
+                                                    }}
+                                                >
+                                                    <AutorenewIcon sx={{ mr: 1 }} />
+                                                    Change Status
+                                                </MenuItem>
+                                            )}
+                                            {String(currentUser.role) === "1995"&& (
+                                                <MenuItem onClick={() => nav(`/dashboard/users/${el._id}`)}>
+                                                    <EditIcon
+                                                        sx={{ mr: 1 }} />
+                                                    Edit
+                                                </MenuItem>)}
+                                            {el._id !== currentUser._id && String(currentUser.role) === "1995" && (
                                                 <MenuItem
                                                     onClick={() => {
                                                         setConfirmUser(el);
@@ -172,6 +178,7 @@ export default function TableShow(props) {
                                                     Delete
                                                 </MenuItem>
                                             )}
+
                                         </Menu>
                                         <Menu
                                             anchorEl={statusAnchorEl}
@@ -182,6 +189,7 @@ export default function TableShow(props) {
                                         >
                                             {allowedStatuses.map((status) => (
                                                 <MenuItem
+
                                                     key={status}
                                                     onClick={() => {
                                                         props.updateStatus(el._id, status);

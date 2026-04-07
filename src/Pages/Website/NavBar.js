@@ -128,7 +128,7 @@ export default function NavBar({ onAboutClick }) {
                             fontSize: { xs: 22, md: 28 }
                         }}
                     >
-                        →RedLink
+                        →HayatDrop
                     </Typography>
 
                     {/* Desktop Nav */}

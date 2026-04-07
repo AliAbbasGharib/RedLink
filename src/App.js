@@ -69,6 +69,8 @@ function App() {
               <Route path="available-donor" element={<AvailableDonor />} />
               <Route path="notification" element={<AddNotification />} />
               <Route path="notification/:id" element={<UpdateNotification />} />
+               </Route>
+               <Route element={<RequireAuth allowedRole={['1995']} />}>
               <Route path="message" element={<Messages />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>

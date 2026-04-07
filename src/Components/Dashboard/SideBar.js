@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { Menu as MenuContext } from '../../Context/MenuContext';
 import Cookie from "cookie-universal";
 import { links } from './NavLink';
-import { USER } from '../../API/Api';
+import { LOGOUT, USER } from '../../API/Api';
 import { Axios } from '../../API/Axios';
 import {
     Drawer,
@@ -33,7 +33,15 @@ export default function SideBar() {
             .then(res => setUser(res.data))
             .catch((error) => console.log(error));
     }, [token]);
-
+    async function handleLogOut() {
+        try {
+            await Axios.post(LOGOUT)
+            cookie.remove("token");
+            window.location.pathname = "/login";
+        } catch (error) {
+            console.log(error);
+        }
+    }
     return (
         <Drawer
             variant="permanent"
@@ -97,9 +105,11 @@ export default function SideBar() {
                                             color: 'inherit',
                                         }}
                                     >
+                                       
                                         <FontAwesomeIcon icon={link.icon} />
                                     </ListItemIcon>
-                                    {isOpen && <ListItemText primary={link.name} />}
+                                    {isOpen && <ListItemText onClick={link.function === 'logout' ? handleLogOut : null} primary={link.name} />}
+                                    
                                 </ListItemButton>
                             </ListItem>
                         </Tooltip>

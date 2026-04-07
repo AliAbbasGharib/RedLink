@@ -1,4 +1,4 @@
-export const baseURL = 'https://seniorproject-1-3rbo.onrender.com/api';
+export const baseURL = 'https://seniorproject-production-eb3a.up.railway.app/api';
 
 export const REGISTER = `${baseURL}/register`;
 export const LOGIN = `${baseURL}/login`;

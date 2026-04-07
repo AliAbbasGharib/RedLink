@@ -37,7 +37,15 @@ export default function Users() {
     // Fetch users on page change
     useEffect(() => {
         setLoading(true);
-        Axios.get(`${USERS}?page=${page}&limit=10`)
+        Axios.get(USERS, {
+  params: {
+    page,
+    limit: 10,
+    name: searchName,
+    blood_type: searchBloodType,
+    address: searchAddress,
+  },
+})
             .then((response) => {
 
                 setUsers(response.data.users || []);
@@ -45,8 +53,11 @@ export default function Users() {
                 setLoading(false);
             })
             .catch((error) => console.log(error));
-    }, [page]);
+    }, [page, searchName, searchBloodType, searchAddress]);
 
+    useEffect(() => {
+        setPage(1);
+    }, [searchName, searchBloodType, searchAddress]);
     // Delete user
     function deleteUser(id) {
         axios

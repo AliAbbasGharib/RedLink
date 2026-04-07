@@ -128,7 +128,7 @@ function GetRequestBlood() {
 
     const menuItems = [
         { label: "View", onClick: () => handleView(selectedReq) },
-        { label: "Update", link: selectedReq ? `/request-blood/update/${selectedReq._id}` : "" },
+        { label: "Update", link: selectedReq ? `${selectedReq._id}` : "" },
         {
             label: "Delete",
             onClick: () => setConfirmRequest(selectedReq),

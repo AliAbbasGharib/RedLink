@@ -59,17 +59,17 @@ export const links = [
     name: "Messages",
     path: "/dashboard/message",
     icon: faEnvelope, 
-    role: ["1995", "1996"]
+    role: ["1995"]
   },
   {
     name: "Settings",
     path: "/dashboard/settings",
     icon: faGear, 
-    role: ["1995", "1996"]
+    role: ["1995"]
   },
   {
     name: "Logout",
-    path: "/dashboard", // Consider renaming path to `/logout`
+    function: "logout", // Consider renaming path to `/logout`
     icon: faRightFromBracket, // 🔚 Logout
     role: ["1995", "1996"]
   }

@@ -51,7 +51,7 @@ export default function RequestBloodForm({ initialData = {}, onSubmit, title, bu
 
   useEffect(() => {
     loadScript(
-      `https://maps.googleapis.com/maps/api/js?key=AIzaSyAxjQtpZsmQISacL74_I90QUGElgEre69M&libraries=places&loading=async`,
+      `https://maps.googleapis.com/maps/api/js?key=AIzaSyAVGH1CDRM5yW4kMAAqrhg96fIIzTZIgGU&libraries=places&loading=async`,
       () => {
         if (window.google && window.google.maps) {
           autocompleteRef.current = new window.google.maps.places.Autocomplete(
@@ -229,8 +229,8 @@ export default function RequestBloodForm({ initialData = {}, onSubmit, title, bu
                 allowFullScreen
                 src={
                   form.donation_point_lat && form.donation_point_lng
-                    ? `https://www.google.com/maps/embed/v1/view?key=AIzaSyAxjQtpZsmQISacL74_I90QUGElgEre69M&center=${form.donation_point_lat},${form.donation_point_lng}&zoom=16`
-                    : `https://www.google.com/maps/embed/v1/place?key=AIzaSyAxjQtpZsmQISacL74_I90QUGElgEre69M&q=${encodeURIComponent(form.donation_point)}`
+                    ? `https://www.google.com/maps/embed/v1/view?key=AIzaSyAVGH1CDRM5yW4kMAAqrhg96fIIzTZIgGU&center=${form.donation_point_lat},${form.donation_point_lng}&zoom=16`
+                    : `https://www.google.com/maps/embed/v1/place?key=AIzaSyAVGH1CDRM5yW4kMAAqrhg96fIIzTZIgGU&q=${encodeURIComponent(form.donation_point)}`
                 }
               />
             </Box>
